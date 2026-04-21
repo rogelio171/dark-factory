@@ -1,0 +1,38 @@
+# CODEOWNERS for Dark Factory PRs.
+#
+# Strategy: CODEOWNERS is a RISK FILTER, not a default reviewer assignment.
+# Paths with no owner are satisfied by Copilot's review alone, which is what
+# allows low-risk PRs to auto-merge without a human approver.
+# Paths with an owner require that owner before the PR can merge, regardless
+# of Copilot.
+
+# Default: no owner. Copilot review is sufficient.
+# (No line for `*` on purpose.)
+
+# Database migrations and schemas
+/migrations/                     @your-team/db
+**/*.sql                         @your-team/db
+**/schema.prisma                 @your-team/db
+**/schema.graphql                @your-team/db
+
+# Infrastructure
+/infra/                          @your-team/platform
+/terraform/                      @your-team/platform
+/k8s/                            @your-team/platform
+/helm/                           @your-team/platform
+/Dockerfile                      @your-team/platform
+/docker-compose.yml              @your-team/platform
+
+# CI configuration
+/.github/                        @your-team/platform
+
+# Authentication, authorization, and secrets
+/src/auth/                       @your-team/security
+/src/security/                   @your-team/security
+/internal/auth/                  @your-team/security
+SECURITY.md                      @your-team/security
+
+# Public API surfaces
+**/openapi.yaml                  @your-team/api
+**/openapi.json                  @your-team/api
+**/*.proto                       @your-team/api

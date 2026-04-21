@@ -11,12 +11,15 @@ Most agent workflows are good at one part of the delivery loop and weak at the r
 1. Pull a story from Jira.
 2. Understand the codebase and project conventions.
 3. Clarify ambiguous requirements.
-4. Create a durable PRD and execution record.
+4. Create a durable PRD and execution record, including a risk classification.
 5. Implement with TDD in small vertical slices.
 6. Review changes in a fix-and-re-review loop.
-7. Validate the feature and capture evidence.
-8. Create the PR and update Jira with a useful summary.
-9. Resume safely if the session is interrupted.
+7. Validate the feature and capture multi-kind evidence.
+8. Mirror CI locally before pushing.
+9. Open the PR, request a Copilot review, and arm auto-merge.
+10. Babysit the PR through review and CI without human intervention on low-risk paths.
+11. Update the wiki with newly learned patterns after merge.
+12. Resume safely if the session is interrupted at any point.
 
 ## Core Ideas
 
@@ -39,11 +42,15 @@ The implementation workflow is intentionally conservative: one test, one behavio
 - `df-story-intake`: retrieve a Jira story and initialize local story state
 - `df-grill-me`: reusable one-question-at-a-time interview skill
 - `df-clarify`: story-specific clarification using ticket and wiki context
-- `df-spec`: create the durable PRD and state files
+- `df-spec`: create the durable PRD and state files, including risk classification
 - `df-implement`: implement through a strict red-green-refactor loop
 - `df-review`: run a spec-aware review/fix/re-review loop
-- `df-evidence`: collect screenshots and evidence with Playwright MCP
-- `df-ship`: create the PR, update Jira, and finish the workflow
+- `df-evidence`: collect multi-kind evidence (UI, API, CLI, unit, migration)
+- `df-preflight`: mirror CI locally before opening the PR
+- `df-ship`: open the PR, label risk, request Copilot review, arm auto-merge
+- `df-merge`: babysit the PR through Copilot review and CI until merged
+- `df-wiki-update`: append patterns, entities, and log entries after merge
+- `df-github-init`: scaffold the GitHub-side automation (Actions, CODEOWNERS, Copilot instructions)
 - `df-resume`: resume interrupted work from `state.md`
 
 ## Repository Layout
@@ -53,6 +60,7 @@ dark-factory/
 ├── README.md
 ├── install.sh
 ├── docs/
+│   ├── SKILL_CONTRACT.md
 │   └── WORKFLOW.md
 └── skills/
     ├── dark-factory/
@@ -64,7 +72,11 @@ dark-factory/
     ├── df-implement/
     ├── df-review/
     ├── df-evidence/
+    ├── df-preflight/
     ├── df-ship/
+    ├── df-merge/
+    ├── df-wiki-update/
+    ├── df-github-init/
     └── df-resume/
 ```
 
@@ -74,10 +86,11 @@ Dark Factory is a skill pack, so it is meant to be installed into another projec
 
 Before using it in a target project, make sure the following are available:
 
-- GitHub CLI authenticated for PR creation and PR checks
+- GitHub CLI authenticated for PR creation, PR checks, and branch-protection setup
 - Atlassian Rovo MCP configured for Jira access
 - Playwright MCP configured for browser-based validation and screenshots
 - A coding agent that discovers skills from `.agents/skills/`
+- Repository admin permissions on the target repo if you intend to run `df-github-init` (it configures branch protection and required reviewers)
 
 ## Installation
 
@@ -89,13 +102,19 @@ Install the skill pack into a target project:
 
 If no path is provided, the current directory is used as the target.
 
+Pass `--with-github` to print the follow-up command that scaffolds the GitHub-side automation:
+
+```bash
+./install.sh --with-github /path/to/target-project
+```
+
 The installer copies each skill directory into:
 
 ```text
 .agents/skills/
 ```
 
-inside the target project.
+inside the target project, writes a `.dark-factory-version` stamp from the source repo's `git rev-parse HEAD`, and skips any skill whose source content is unchanged since the last install.
 
 ### Example
 
@@ -138,11 +157,32 @@ This is the long-lived project knowledge base.
 docs/specs/<ticket-slug>/
 ├── spec.md
 ├── state.md
+├── preflight.json
 ├── reviews/
 └── evidence/
+    ├── ui/
+    ├── api/
+    ├── cli/
+    ├── unit/
+    └── migration/
 ```
 
 This is the durable record for a single story.
+
+### 3. GitHub-side automation (created by `df-github-init`)
+
+```text
+.github/
+├── workflows/
+│   ├── pr-checks.yml
+│   ├── pr-open.yml
+│   └── pr-fix-loop.yml
+├── CODEOWNERS
+├── pull_request_template.md
+└── copilot-instructions.md
+```
+
+This is what lets Copilot review and the auto-fix agent merge low-risk PRs without human approval.
 
 ## How To Use Dark Factory
 
@@ -169,13 +209,17 @@ Resume Dark Factory for the current in-progress story.
 The `dark-factory` skill decides what phase to run next:
 
 - If `wiki/` is missing, it starts with `df-wiki-init`.
+- If `.github/workflows/pr-checks.yml` is missing in the target repo, it suggests `df-github-init`.
 - If the story has not been initialized, it uses `df-story-intake`.
 - If requirements are unclear, it uses `df-clarify`.
 - If `spec.md` is missing or incomplete, it uses `df-spec`.
 - If the story is ready to build, it uses `df-implement`.
 - If implementation needs review, it uses `df-review`.
 - If review is clean, it uses `df-evidence`.
-- If the feature is validated, it uses `df-ship`.
+- If evidence is recorded, it uses `df-preflight` to mirror CI locally.
+- If preflight is green, it uses `df-ship` to open the PR and arm auto-merge.
+- If a PR is open, it uses `df-merge` to babysit the PR through Copilot review and CI.
+- If `df-merge` finishes a merge, it invokes `df-wiki-update` to fold new patterns into the wiki.
 - If work was interrupted, it uses `df-resume`.
 
 ## End-to-End Workflow
@@ -232,21 +276,35 @@ The goal is for another agent to continue the work with no hidden chat context.
 
 ### 7. Evidence collection
 
-`df-evidence` validates the finished feature through Playwright MCP and stores screenshots in `docs/specs/<ticket>/evidence/`.
+`df-evidence` validates the finished feature and stores proof under `docs/specs/<ticket>/evidence/` using the kind that fits the change: UI screenshots through Playwright MCP, API request/response transcripts, CLI session captures, unit test reports, or before/after schema dumps for migrations.
 
-### 8. Shipping
+### 8. Preflight
+
+`df-preflight` mirrors CI locally before the PR is opened. It runs the project's lint, typecheck, test, build, secret scan, and dependency audit, lints the branch's commit messages, and writes `docs/specs/<ticket>/preflight.json`. Any failure blocks `df-ship`.
+
+### 9. Shipping
 
 `df-ship`:
 
-- creates or updates the GitHub PR
-- summarizes the changes and test results
-- posts the summary and evidence back to Jira
-- updates final documentation if needed
-- transitions the story when appropriate
+- opens the GitHub PR with a structured body and links to evidence
+- applies a `risk:<level>` label and, when eligible, an `auto_merge_eligible` label
+- requests a Copilot code review
+- arms auto-merge when `risk: low` and `auto_merge_eligible: true`
+- posts an initial summary to Jira
+- sets `status: merging` and exits
 
-### 9. Resume
+### 10. Merging
 
-`df-resume` reads the on-disk state and supporting artifacts to continue safely after an interruption.
+`df-merge` babysits the PR until it merges:
+
+- watches required checks and fixes scoped failures
+- classifies Copilot review comments and applies auto-fixes for the eligible ones
+- escalates back to a human when a comment hits a CODEOWNERS path, conflicts with the spec, or requires scope expansion
+- on merge, invokes `df-wiki-update`, posts the final Jira summary, and transitions the ticket to done
+
+### 11. Resume
+
+`df-resume` reads the on-disk state and supporting artifacts to continue safely after an interruption, including resuming the merging phase from `state.md`'s `pr_url` field.
 
 ## Day-To-Day Usage Patterns
 
@@ -280,6 +338,29 @@ Use df-clarify on OFRS2-12345 before creating the spec.
 Use df-grill-me on this implementation approach.
 ```
 
+### Scaffold GitHub automation in a new repo
+
+```text
+Use df-github-init to set up the PR workflows and Copilot instructions.
+```
+
+### Babysit a PR that is open but not merged
+
+```text
+Use df-merge on the current story's PR.
+```
+
+## Reducing Human Intervention in PR Review
+
+Dark Factory removes humans from the review path on low-risk changes by combining four pieces:
+
+1. `df-spec` writes a `risk` and `auto_merge_eligible` field into `state.md` based on which paths the change touches.
+2. `df-github-init` scaffolds GitHub Actions, a CODEOWNERS file used as a risk filter, and `copilot-instructions.md` derived from the project wiki so Copilot reviews against project conventions.
+3. `df-ship` opens the PR, requests Copilot review, and arms `gh pr merge --auto --squash` when the change is low risk.
+4. `df-merge` runs as the GitHub-side fix loop: it watches required checks, classifies Copilot comments, applies the auto-fix-eligible ones (lint, types, naming, missing tests, docstrings, dead code, suggested refactors with concrete code), and escalates to a human only on CODEOWNERS paths, security-tagged comments, or scope-expanding requests.
+
+The fix-loop workflow ships runtime-agnostic. `df-github-init` writes a clearly marked `AGENT RUNTIME PLACEHOLDER` step inside `.github/workflows/pr-fix-loop.yml` with three commented examples (Cursor CLI, Cursor Cloud, Claude Code Action). Pick the one that matches your tooling.
+
 ## Updating the Skill Pack in a Target Project
 
 If you make changes to this repository and want to refresh the installed copy in a target project, run the installer again:
@@ -312,3 +393,4 @@ Run `df-wiki-init` again in the target project to refresh the project knowledge 
 
 - For the concise lifecycle summary, see `docs/WORKFLOW.md`.
 - For the exact instructions each phase uses, read the `SKILL.md` files under `skills/`.
+
