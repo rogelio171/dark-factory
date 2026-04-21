@@ -9,15 +9,34 @@ description: Implements a story through a strict red-green-refactor TDD loop usi
 
 Complete the story with minimal, human-readable changes that satisfy the acceptance criteria.
 
-## Loop
+## Inputs
+
+- `docs/specs/<ticket>/spec.md` (slices, testing strategy, acceptance criteria).
+- `docs/specs/<ticket>/state.md`.
+- Nearby tests and existing project patterns (per `wiki/patterns/`).
+
+## Preconditions
+
+- `state.md` is `status: implementing`.
+- `spec.md` exists and lists at least one vertical slice.
+- The branch is checked out and clean.
+
+## Workflow
 
 1. Read `spec.md`, `state.md`, and nearby tests.
-2. Pick one thin vertical slice.
-3. Write one failing test for one external behavior.
-4. Make the minimum code change to pass it.
-5. Re-run the test and relevant checks.
+2. Pick one thin vertical slice from the spec.
+3. Write one failing test for one external behavior (Red).
+4. Make the minimum code change to pass it (Green).
+5. Re-run the test and any directly relevant checks.
 6. Refactor only while green.
-7. Record progress and move to the next slice.
+7. Record progress in `state.md` and commit in a small, related chunk.
+8. Move to the next slice.
+
+## Outputs
+
+- Code changes scoped to one slice per cycle.
+- Updated `state.md` after each meaningful slice.
+- Commits using the ticket ID in the message.
 
 ## Rules
 
@@ -25,13 +44,12 @@ Complete the story with minimal, human-readable changes that satisfy the accepta
 - Prefer public-behavior tests over implementation-detail tests.
 - Make the smallest change that passes.
 - Match existing project patterns unless the spec explicitly changes them.
-- Update `state.md` after each meaningful slice.
-
-## Commits
-
 - Commit in small, related chunks after green checkpoints.
-- Use the ticket ID in the message when possible.
 - Do not bundle unrelated cleanup with feature work.
+
+## Handoff
+
+When all slices are green and acceptance criteria are covered, advance `state.md` to `status: reviewing` and invoke `df-review`.
 
 ## Files
 

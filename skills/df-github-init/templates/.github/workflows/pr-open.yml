@@ -1,0 +1,51 @@
+name: pr-open
+
+on:
+  pull_request:
+    types: [opened, edited, ready_for_review]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  triage:
+    name: Triage and arm auto-merge
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply risk and auto-merge labels from PR body
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+          risk="$(printf '%s' "$PR_BODY" | grep -iE '^[[:space:]]*-?[[:space:]]*risk:[[:space:]]*(low|medium|high)' | head -n1 | sed -E 's/.*risk:[[:space:]]*//I' | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]' || true)"
+          if [ -n "$risk" ]; then
+            gh pr edit "$PR_NUMBER" --add-label "risk:$risk" || true
+          fi
+          if printf '%s' "$PR_BODY" | grep -qiE '^[[:space:]]*-?[[:space:]]*auto[_-]merge[[:space:]]*eligible:[[:space:]]*true'; then
+            gh pr edit "$PR_NUMBER" --add-label "auto_merge_eligible" || true
+          fi
+
+      - name: Request Copilot code review
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh api -X POST "repos/${REPO}/pulls/${PR_NUMBER}/requested_reviewers" \
+            -f reviewers='["copilot-pull-request-reviewer"]' || \
+            echo "Copilot reviewer request failed (verify the bot is enabled in repo Settings -> Code review)."
+
+      - name: Arm auto-merge when eligible
+        if: contains(github.event.pull_request.labels.*.name, 'auto_merge_eligible')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr merge "$PR_NUMBER" --auto --squash

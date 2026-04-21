@@ -1,0 +1,116 @@
+name: pr-fix-loop
+
+on:
+  pull_request_review:
+    types: [submitted]
+  check_suite:
+    types: [completed]
+
+permissions:
+  pull-requests: write
+  contents: write
+  checks: read
+  issues: write
+
+jobs:
+  decide:
+    name: Decide whether to invoke df-merge
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.gate.outputs.should_run }}
+      pr_number: ${{ steps.gate.outputs.pr_number }}
+    steps:
+      - id: gate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          REVIEW_STATE: ${{ github.event.review.state }}
+          CHECK_CONCLUSION: ${{ github.event.check_suite.conclusion }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          should_run="false"
+          pr_number=""
+
+          if [ "$EVENT_NAME" = "pull_request_review" ] && [ "$REVIEW_STATE" = "changes_requested" ]; then
+            should_run="true"
+            pr_number="${{ github.event.pull_request.number }}"
+          elif [ "$EVENT_NAME" = "check_suite" ] && [ "$CHECK_CONCLUSION" = "failure" ]; then
+            pr_number="$(gh api "repos/${REPO}/commits/${{ github.event.check_suite.head_sha }}/pulls" --jq '.[0].number // empty')"
+            if [ -n "$pr_number" ]; then
+              should_run="true"
+            fi
+          fi
+
+          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+          echo "pr_number=$pr_number" >> "$GITHUB_OUTPUT"
+
+  invoke_agent:
+    name: Run df-merge auto-fix loop
+    needs: decide
+    if: needs.decide.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout PR head
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ needs.decide.outputs.pr_number }}
+        run: |
+          set -euo pipefail
+          gh pr checkout "$PR_NUMBER"
+
+      # ---------------------------------------------------------------------
+      # AGENT RUNTIME PLACEHOLDER
+      # ---------------------------------------------------------------------
+      # Replace this block with the runtime that will execute df-merge.
+      # The agent must:
+      #   1. Read .agents/skills/df-merge/SKILL.md.
+      #   2. Run the babysit-style loop scoped to PR #${{ needs.decide.outputs.pr_number }}.
+      #   3. Push fixes back to the PR head branch.
+      #   4. Resolve conversations it has addressed.
+      #
+      # Three example invocations are below. Pick one, uncomment, and fill the
+      # required secrets in repo Settings -> Secrets and variables -> Actions.
+      #
+      # Example 1: Cursor CLI (cursor-agent in headless mode)
+      # ---------------------------------------------------------------------
+      # - name: Run Cursor CLI
+      #   env:
+      #     CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+      #     PR_NUMBER: ${{ needs.decide.outputs.pr_number }}
+      #   run: |
+      #     curl -fsSL https://cursor.com/install | bash
+      #     cursor-agent --headless \
+      #       --skill df-merge \
+      #       --context "PR #${PR_NUMBER}, run the df-merge babysit loop"
+      #
+      # Example 2: Cursor Cloud Agents
+      # ---------------------------------------------------------------------
+      # - name: Trigger Cursor Cloud Agent
+      #   env:
+      #     CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+      #     PR_NUMBER: ${{ needs.decide.outputs.pr_number }}
+      #     REPO: ${{ github.repository }}
+      #   run: |
+      #     curl -fsSL -X POST https://api.cursor.com/v1/agents \
+      #       -H "Authorization: Bearer $CURSOR_API_KEY" \
+      #       -H "Content-Type: application/json" \
+      #       -d "{\"repo\":\"$REPO\",\"pr_number\":$PR_NUMBER,\"skill\":\"df-merge\"}"
+      #
+      # Example 3: Anthropic's Claude Code GitHub Action
+      # ---------------------------------------------------------------------
+      # - name: Run Claude Code
+      #   uses: anthropics/claude-code-action@v1
+      #   with:
+      #     anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+      #     prompt: "Read .agents/skills/df-merge/SKILL.md and run the babysit loop on PR #${{ needs.decide.outputs.pr_number }}."
+      # ---------------------------------------------------------------------
+
+      - name: Placeholder failure
+        run: |
+          echo "::error title=df-github-init::Replace the AGENT RUNTIME PLACEHOLDER block in pr-fix-loop.yml before this workflow can do anything."
+          exit 1

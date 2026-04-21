@@ -1,29 +1,66 @@
 ---
 name: df-evidence
-description: Validates completed story behavior with Playwright MCP screenshots and records evidence for each acceptance criterion. Use when implementation and review are done and the story needs proof that the requested behavior works.
+description: Validates completed story behavior using the evidence kind that fits the change (UI, API, CLI, unit, migration) and records proof for each acceptance criterion. Use when implementation and review are done and the story needs proof that the requested behavior works.
 ---
 
 # DF Evidence
 
 ## Goal
 
-Produce reusable proof that the story satisfies the acceptance criteria.
+Produce reusable, kind-appropriate proof that the story satisfies every acceptance criterion.
+
+## Inputs
+
+- `docs/specs/<ticket>/spec.md`, especially the `Evidence Plan` section.
+- A working local environment for the change (running app for `ui`, runnable CLI for `cli`, etc.).
+- Playwright MCP for `ui` evidence.
+
+## Preconditions
+
+- Implementation is complete and tests are green.
+- The Evidence Plan in `spec.md` maps each acceptance criterion to an evidence kind.
+
+## Evidence Kinds
+
+| Kind | Captures | Stored under |
+| --- | --- | --- |
+| `ui` | Playwright screenshot (and optional trace) of the user-visible behavior. | `evidence/ui/` |
+| `api` | Recorded request and response transcript for new or changed endpoints. | `evidence/api/` |
+| `cli` | Terminal session transcript for new or changed commands. | `evidence/cli/` |
+| `unit` | Path to the test report or recorded test output that proves the behavior. | `evidence/unit/` |
+| `migration` | Before-and-after schema dump and the upgrade/downgrade output. | `evidence/migration/` |
 
 ## Workflow
 
-1. Read `spec.md` and the acceptance criteria.
-2. Map each criterion to a browser validation step.
-3. Use Playwright MCP to open the app and exercise the behavior.
-4. Save screenshots under `docs/specs/<ticket>/evidence/`.
-5. Create an evidence log that maps each criterion to the screenshot or recording.
+1. Read `spec.md` and confirm the Evidence Plan is complete.
+2. Create the evidence subdirectories that the plan calls for.
+3. For each acceptance criterion, capture evidence using the catalog in [REFERENCE.md](REFERENCE.md):
+   - `ui`: drive the app through Playwright MCP and save screenshots.
+   - `api`: run the request and save request and response under a single file.
+   - `cli`: run the command and save the transcript.
+   - `unit`: run the targeted test set and save the report path and the relevant excerpt.
+   - `migration`: dump the schema before and after and save the upgrade output.
+4. Write `docs/specs/<ticket>/evidence/INDEX.md` mapping each criterion to the file(s) that prove it.
+5. Update `state.md` with `status: evidencing` -> ready to call `df-preflight`, and the count of criteria still missing evidence.
+
+## Outputs
+
+- Per-kind evidence files under `docs/specs/<ticket>/evidence/<kind>/`.
+- `docs/specs/<ticket>/evidence/INDEX.md` mapping criterion to file(s).
+- Updated `state.md`.
 
 ## Rules
 
-- Do not claim a criterion is complete without observable proof.
-- Use one screenshot per important checkpoint when possible.
-- If the app cannot be run or reached, stop and record the blocker.
-- Keep evidence file names descriptive and stable.
+- Do not claim a criterion is complete without observable proof of the matching kind.
+- One file per important checkpoint; do not bundle multiple criteria into a single screenshot.
+- Use descriptive, stable file names (`criterion-1-toggle-on.png`, not `screenshot-2026-04-19-1.png`).
+- If the app cannot be run or reached for a `ui` or `api` criterion, stop and record the blocker in `state.md`.
+- If a criterion does not fit any of the five kinds, stop and ask the user; do not invent a sixth kind silently.
 
 ## Handoff
 
-When evidence is complete, move to `df-ship`.
+When every criterion has evidence and `INDEX.md` is written, advance to `df-preflight`.
+
+## Files
+
+- For per-kind capture commands and the `INDEX.md` shape, see [REFERENCE.md](REFERENCE.md).
