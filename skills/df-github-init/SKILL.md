@@ -1,6 +1,6 @@
 ---
 name: df-github-init
-description: Scaffolds the GitHub-side automation in the target repository (Actions for PR checks, PR-open, and PR-fix-loop, plus CODEOWNERS as a risk filter, a structured PR template, and Copilot instructions derived from the wiki) so Copilot review and auto-merge can replace human review on low-risk PRs. Use once per target repository, or when the user asks to refresh the PR automation.
+description: Scaffolds the GitHub-side automation in the target repository (Actions for PR checks, PR-open, and PR-fix-loop, plus CODEOWNERS as a risk filter, a structured PR template, and Copilot instructions derived from the wiki) so Copilot review and auto-merge can replace human review on low-risk PRs. Use when setting up a target repository for Dark Factory automation or refreshing the PR automation.
 ---
 
 # DF GitHub Init
@@ -35,7 +35,7 @@ Stand up the GitHub-side automation that lets `df-ship` arm auto-merge and `df-m
 4. If the repo does not already have the labels `risk:low`, `risk:medium`, `risk:high`, `auto_merge_eligible`, create them with `gh label create`.
 5. Print (do not silently run) the branch-protection command from "Branch protection" below and ask the user to confirm.
 6. After the user confirms, run the command and report the result.
-7. Open `.github/workflows/pr-fix-loop.yml` and instruct the user to fill the `AGENT RUNTIME PLACEHOLDER` step with their chosen runtime (Cursor CLI, Cursor Cloud, Claude Code Action, etc. - examples are commented in the file).
+7. Open `.github/workflows/pr-fix-loop.yml` and instruct the user to fill the `AGENT RUNTIME PLACEHOLDER` step with their chosen runtime (Cursor CLI, Cursor Cloud, Claude Code Action, etc. - examples are commented in the file), then set `DF_MERGE_RUNTIME_CONFIGURED: "true"`. Until then, the workflow exits successfully without running fixes.
 8. Commit the changes on a branch named `chore/df-github-init` and open a PR titled "chore: scaffold Dark Factory GitHub automation".
 
 ## Branch protection
@@ -81,6 +81,8 @@ JSON
 - Never set `enforce_admins: true`; that locks out the user who runs this skill.
 - Never assume Copilot review is enabled on the repo. If it is not, instruct the user to enable it under repo Settings -> Code review.
 - Do not commit secrets. The fix-loop workflow expects a `CURSOR_API_KEY` (or analogous) secret; only document the requirement, do not fabricate values.
+- Keep `pr-open.yml` fail-closed: auto-merge may only be armed when the PR body records `risk: low` and `auto_merge_eligible: true`.
+- Keep `pr-checks.yml` free of hard-coded default-branch names; branch protection targets the detected default branch, while PR checks run for pull requests regardless of whether the branch is named `main`, `master`, or something else.
 
 ## Handoff
 

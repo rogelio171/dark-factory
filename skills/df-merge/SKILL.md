@@ -37,7 +37,7 @@ Take a PR from "open" to "merged + Jira done + wiki updated" without human inter
       - For each unresolved review comment, classify using the matrix in [REFERENCE.md](REFERENCE.md).
       - For auto-fix-eligible comments: apply the fix, push, then resolve the thread via the GraphQL call in [REFERENCE.md](REFERENCE.md). Reply to the thread with one line summarizing what was changed.
       - For escalate comments: post a reply explaining the escalation, set `status: blocked` in `state.md` with the comment ID, and exit.
-   6. If checks are green and review is approved and no auto-merge is set, run `gh pr merge "$PR_NUMBER" --squash` only when `risk: low`; otherwise leave the merge button for a human.
+   6. If checks are green and review is approved and no auto-merge is set, run `gh pr merge "$PR_NUMBER" --squash` only when `risk: low` and `auto_merge_eligible: true`; otherwise leave the merge button for a human.
    7. If nothing changed since the last poll, sleep with backoff (30s, 60s, 120s, capped at 300s).
 3. Post-merge:
    1. Capture the merge SHA: `gh pr view "$PR_NUMBER" --json mergeCommit --jq .mergeCommit.oid`.
@@ -46,6 +46,15 @@ Take a PR from "open" to "merged + Jira done + wiki updated" without human inter
    4. Transition the Jira ticket to its done state.
    5. Invoke `df-wiki-update`.
    6. Set `state.md` to `status: complete`.
+
+## Delegation Model
+
+The main agent coordinates the PR babysitting loop and owns escalation decisions. Prefer subagents or agent teams for focused review-thread classification, CI failure diagnosis, and fix recommendations.
+
+- Use a specialist subagent to classify unresolved review threads against [REFERENCE.md](REFERENCE.md) and the story spec.
+- Use a diagnostic subagent for failing CI logs; it should return the minimal fix path or an escalation reason.
+- If the runtime supports write-capable agent teams, delegate one scoped fix at a time and have the coordinator verify the diff before pushing.
+- The coordinator re-fetches PR status after every push, updates `state.md`, replies to threads, and decides when to stop or escalate.
 
 ## Outputs
 
@@ -61,10 +70,11 @@ Take a PR from "open" to "merged + Jira done + wiki updated" without human inter
 - Never push to a branch that is not the PR's head branch.
 - Never resolve a review thread you did not address.
 - Never close the PR. If forward progress is impossible, set `status: blocked` and stop.
-- Never auto-merge a PR that is `risk: medium` or `risk: high`. Wait for the required human reviewer.
+- Never auto-merge a PR that is `risk: medium`, `risk: high`, or missing `auto_merge_eligible: true`. Wait for the required human reviewer.
 - Always reply on a thread before resolving it; the reply explains what was done.
 - Always re-fetch PR status after pushing fixes; never rely on the previous poll.
 - When in doubt about whether a comment is auto-fix-eligible, escalate.
+- Prefer subagents or agent teams for classification and diagnostics; the coordinator owns pushes, thread resolution decisions, and state.
 
 ## Handoff
 

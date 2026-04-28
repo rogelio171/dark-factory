@@ -47,10 +47,11 @@ Open the PR with everything Copilot review and `df-merge` need to drive it to me
      gh pr edit "$PR_NUMBER" --add-label "auto_merge_eligible"
    fi
    ```
-7. Request Copilot review (defensive; the `pr-open` workflow does this too):
+7. Request Copilot review (defensive; the `pr-open` workflow does this too). If the request fails because Copilot review is not enabled, warn clearly; do not hide the warning in logs:
    ```bash
    gh api -X POST "repos/${REPO}/pulls/${PR_NUMBER}/requested_reviewers" \
-     -f reviewers='["copilot-pull-request-reviewer"]' || true
+     -f reviewers='["copilot-pull-request-reviewer"]' || \
+     echo "Copilot reviewer request failed; verify repo Settings -> Code review."
    ```
 8. Arm auto-merge only when `risk: low` AND `auto_merge_eligible: true`:
    ```bash
@@ -77,6 +78,7 @@ Open the PR with everything Copilot review and `df-merge` need to drive it to me
 - Never set `auto_merge_eligible` from this skill; trust what the spec wrote into `state.md`.
 - Never close the Jira story from this skill - that is `df-merge`'s job after merge.
 - Never run `gh pr merge --auto` on a PR with `risk: medium` or `risk: high`.
+- Never rely on the `auto_merge_eligible` label alone. Auto-merge requires both `risk: low` and `auto_merge_eligible: true` in `state.md` and the PR body.
 - Keep the PR title prefixed with the ticket ID (`OFRS2-12345: ...`).
 - If `gh pr create` reports the PR already exists, switch to `gh pr edit` and update the body and labels in place.
 

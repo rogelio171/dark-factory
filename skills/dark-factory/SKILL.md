@@ -52,6 +52,15 @@ In order. The first matching condition wins.
 14. If `state.md` is `status: complete`, report the merge SHA and stop.
 15. If a session was interrupted and the user asks to resume, invoke `df-resume`.
 
+## Delegation Model
+
+The main agent is the workflow coordinator, not the primary worker. Keep the main context focused on phase routing, `state.md`, risk gates, user decisions, and synthesis.
+
+- Prefer subagents or agent teams for broad exploration, implementation research, review, evidence capture, preflight diagnosis, and merge babysitting.
+- Launch parallel subagents when separate domains can be investigated independently, then synthesize their findings into the spec, state file, review notes, evidence index, or user-facing summary.
+- Do not let the main agent accumulate all repository, implementation, review, and CI context unless the task is trivial or delegation is unavailable.
+- Before invoking a phase skill, state whether that phase should use a subagent team and what each worker should return.
+
 ## Risk gating
 
 - `risk: high`: never auto-arm merge. `df-ship` will skip `gh pr merge --auto`. Require explicit human approval before transitioning to `merging`.
@@ -70,6 +79,7 @@ In order. The first matching condition wins.
 - Stop and ask the user if a required external integration is unavailable (Atlassian Rovo MCP for `df-story-intake`, `gh` for `df-ship`/`df-merge`, Playwright MCP for `df-evidence` UI kind).
 - Prefer existing wiki pages over rediscovering the same context.
 - Keep implementation minimal and acceptance-criteria driven.
+- Prefer subagents or agent teams for context-heavy work; the orchestrator coordinates, records, and synthesizes.
 - Never skip `df-preflight`; CI cycles are expensive relative to local mirroring.
 - Never skip `df-evidence`; PRs without evidence cannot be auto-merged because the PR template requires the Evidence section.
 

@@ -12,6 +12,11 @@ permissions:
   checks: read
   issues: write
 
+env:
+  # Set this to "true" after replacing the AGENT RUNTIME PLACEHOLDER with a
+  # real runtime. Until then the workflow exits successfully without action.
+  DF_MERGE_RUNTIME_CONFIGURED: "false"
+
 jobs:
   decide:
     name: Decide whether to invoke df-merge
@@ -27,12 +32,15 @@ jobs:
           REVIEW_STATE: ${{ github.event.review.state }}
           CHECK_CONCLUSION: ${{ github.event.check_suite.conclusion }}
           REPO: ${{ github.repository }}
+          RUNTIME_CONFIGURED: ${{ env.DF_MERGE_RUNTIME_CONFIGURED }}
         run: |
           set -euo pipefail
           should_run="false"
           pr_number=""
 
-          if [ "$EVENT_NAME" = "pull_request_review" ] && [ "$REVIEW_STATE" = "changes_requested" ]; then
+          if [ "$RUNTIME_CONFIGURED" != "true" ]; then
+            echo "df-merge runtime is not configured; skipping auto-fix loop."
+          elif [ "$EVENT_NAME" = "pull_request_review" ] && [ "$REVIEW_STATE" = "changes_requested" ]; then
             should_run="true"
             pr_number="${{ github.event.pull_request.number }}"
           elif [ "$EVENT_NAME" = "check_suite" ] && [ "$CHECK_CONCLUSION" = "failure" ]; then
@@ -110,7 +118,6 @@ jobs:
       #     prompt: "Read .agents/skills/df-merge/SKILL.md and run the babysit loop on PR #${{ needs.decide.outputs.pr_number }}."
       # ---------------------------------------------------------------------
 
-      - name: Placeholder failure
+      - name: Placeholder no-op
         run: |
-          echo "::error title=df-github-init::Replace the AGENT RUNTIME PLACEHOLDER block in pr-fix-loop.yml before this workflow can do anything."
-          exit 1
+          echo "::notice title=df-github-init::Replace the AGENT RUNTIME PLACEHOLDER block and set DF_MERGE_RUNTIME_CONFIGURED=true to enable df-merge automation."
