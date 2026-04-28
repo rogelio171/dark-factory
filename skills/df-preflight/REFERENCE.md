@@ -33,9 +33,10 @@
 
 | Manifest detected | lint | typecheck | test | build |
 | --- | --- | --- | --- | --- |
-| `package.json` with script | `npm run lint` | `npm run typecheck` or `tsc --noEmit` | `npm test --silent` | `npm run build` |
-| `pnpm-lock.yaml` | `pnpm lint` | `pnpm typecheck` | `pnpm test` | `pnpm build` |
-| `yarn.lock` | `yarn lint` | `yarn typecheck` | `yarn test` | `yarn build` |
+| `package.json` with script + `package-lock.json` | `npm run lint` | `npm run typecheck` or `npx tsc --noEmit` | `npm test` | `npm run build` |
+| `package.json` with script + `pnpm-lock.yaml` | `pnpm lint` | `pnpm typecheck` | `pnpm test` | `pnpm build` |
+| `package.json` with script + `yarn.lock` | `yarn lint` | `yarn typecheck` | `yarn test` | `yarn build` |
+| `package.json` with script only | `npm run lint` after `npm install` | `npm run typecheck` or `npx tsc --noEmit` after `npm install` | `npm test` after `npm install` | `npm run build` after `npm install` |
 | `pyproject.toml` with `ruff` | `ruff check .` | `mypy .` if configured | `pytest -q` | `python -m build` if configured |
 | `pyproject.toml` only | `flake8` if installed | `mypy .` if configured | `pytest -q` | skipped |
 | `go.mod` | `go vet ./...` | (covered by build) | `go test ./...` | `go build ./...` |
@@ -52,6 +53,7 @@ If multiple manifests are present, run all that apply (e.g., a polyglot repo wit
 | gitleaks | `gitleaks detect --source . --no-git -v` | `gitleaks` on PATH |
 | npm audit | `npm audit --omit=dev --json` | `package-lock.json` present |
 | pnpm audit | `pnpm audit --prod --json` | `pnpm-lock.yaml` present |
+| yarn audit | `yarn npm audit --severity critical` | `yarn.lock` present |
 | pip-audit | `pip-audit --format json` | `pip-audit` on PATH and Python project |
 | cargo audit | `cargo audit --json` | `cargo-audit` installed |
 

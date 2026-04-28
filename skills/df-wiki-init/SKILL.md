@@ -29,7 +29,7 @@ Create `wiki/` as the durable project knowledge layer, or refresh it after meani
 
 ### Existing project mode
 
-1. Read the codebase in broad strokes, using subagents when helpful.
+1. Read the codebase in broad strokes, using subagents or agent teams by default for non-trivial repositories.
 2. Identify:
    - stack and tooling
    - architecture boundaries
@@ -38,6 +38,15 @@ Create `wiki/` as the durable project knowledge layer, or refresh it after meani
    - domain entities and workflows
 3. Create or update wiki pages in the correct directories.
 4. Update `wiki/index.md` and append `wiki/log.md`.
+
+## Delegation Model
+
+The main agent coordinates wiki creation and keeps the final wiki concise. For existing codebases, delegate exploration to subagents or agent teams instead of loading the whole repository into the main context.
+
+- Use parallel exploration subagents for stack/tooling, architecture boundaries, testing patterns, and domain entities.
+- Ask each subagent to return durable wiki-ready findings with file paths and confidence notes.
+- The coordinator synthesizes overlapping findings, writes the wiki pages, and records the bootstrap or refresh in `wiki/log.md`.
+- If the repository is small enough for one pass, the coordinator may do the work directly but should still keep findings concise and durable.
 
 ## Outputs
 
@@ -50,6 +59,7 @@ Create `wiki/` as the durable project knowledge layer, or refresh it after meani
 - Prefer durable pages like `api-boundaries.md` over ticket-shaped pages.
 - Keep the wiki concise enough to scan, but complete enough for another agent to continue work.
 - If the repo is very large, summarize by subsystem instead of trying to mirror every file.
+- Prefer subagents or agent teams for repository exploration; the main agent should coordinate and synthesize.
 
 ## Handoff
 

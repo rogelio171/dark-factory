@@ -32,6 +32,15 @@ Complete the story with minimal, human-readable changes that satisfy the accepta
 7. Record progress in `state.md` and commit in a small, related chunk.
 8. Move to the next slice.
 
+## Delegation Model
+
+The main agent coordinates slice selection, state updates, and final synthesis. Prefer subagents or agent teams for context-heavy implementation support.
+
+- Delegate test discovery and nearby-pattern research before each non-trivial slice.
+- Use specialist subagents to inspect failing tests, type errors, or unfamiliar modules and return focused fix recommendations.
+- If the runtime supports write-capable agent teams, delegate isolated slice implementation to a worker and have the coordinator review the diff before committing.
+- If only the main agent can edit, keep edits narrow and use subagents for exploration and validation so the main context stays small.
+
 ## Outputs
 
 - Code changes scoped to one slice per cycle.
@@ -46,6 +55,7 @@ Complete the story with minimal, human-readable changes that satisfy the accepta
 - Match existing project patterns unless the spec explicitly changes them.
 - Commit in small, related chunks after green checkpoints.
 - Do not bundle unrelated cleanup with feature work.
+- Prefer subagents or agent teams for exploration, test discovery, and validation; the coordinator owns slice boundaries and state.
 
 ## Handoff
 

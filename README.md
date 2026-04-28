@@ -35,6 +35,10 @@ Dark Factory uses a Karpathy-style wiki under `wiki/` to store architecture, sta
 
 The implementation workflow is intentionally conservative: one test, one behavior, one minimum code change, then repeat.
 
+### 4. The main agent coordinates, subagents do heavy work
+
+Dark Factory is designed to keep the main agent's context small. The main agent routes phases, updates durable state, asks for decisions, and synthesizes results. It should prefer subagents or agent teams for broad exploration, implementation research, review, evidence capture, preflight diagnosis, and PR babysitting.
+
 ## Included Skills
 
 - `dark-factory`: entry point and workflow orchestrator
@@ -47,7 +51,7 @@ The implementation workflow is intentionally conservative: one test, one behavio
 - `df-review`: run a spec-aware review/fix/re-review loop
 - `df-evidence`: collect multi-kind evidence (UI, API, CLI, unit, migration)
 - `df-preflight`: mirror CI locally before opening the PR
-- `df-ship`: open the PR, label risk, request Copilot review, arm auto-merge
+- `df-ship`: open the PR, label risk, request Copilot review, arm auto-merge only for low-risk eligible changes
 - `df-merge`: babysit the PR through Copilot review and CI until merged
 - `df-wiki-update`: append patterns, entities, and log entries after merge
 - `df-github-init`: scaffold the GitHub-side automation (Actions, CODEOWNERS, Copilot instructions)
@@ -282,6 +286,8 @@ The goal is for another agent to continue the work with no hidden chat context.
 
 `df-preflight` mirrors CI locally before the PR is opened. It runs the project's lint, typecheck, test, build, secret scan, and dependency audit, lints the branch's commit messages, and writes `docs/specs/<ticket>/preflight.json`. Any failure blocks `df-ship`.
 
+The generated `pr-checks.yml` runs on pull requests and pushes without assuming the default branch is named `main` or `master`. `df-github-init` still detects the default branch for branch-protection setup.
+
 ### 9. Shipping
 
 `df-ship`:
@@ -289,7 +295,7 @@ The goal is for another agent to continue the work with no hidden chat context.
 - opens the GitHub PR with a structured body and links to evidence
 - applies a `risk:<level>` label and, when eligible, an `auto_merge_eligible` label
 - requests a Copilot code review
-- arms auto-merge when `risk: low` and `auto_merge_eligible: true`
+- arms auto-merge only when both `risk: low` and `auto_merge_eligible: true` are present in the state and PR body
 - posts an initial summary to Jira
 - sets `status: merging` and exits
 
@@ -359,7 +365,25 @@ Dark Factory removes humans from the review path on low-risk changes by combinin
 3. `df-ship` opens the PR, requests Copilot review, and arms `gh pr merge --auto --squash` when the change is low risk.
 4. `df-merge` runs as the GitHub-side fix loop: it watches required checks, classifies Copilot comments, applies the auto-fix-eligible ones (lint, types, naming, missing tests, docstrings, dead code, suggested refactors with concrete code), and escalates to a human only on CODEOWNERS paths, security-tagged comments, or scope-expanding requests.
 
-The fix-loop workflow ships runtime-agnostic. `df-github-init` writes a clearly marked `AGENT RUNTIME PLACEHOLDER` step inside `.github/workflows/pr-fix-loop.yml` with three commented examples (Cursor CLI, Cursor Cloud, Claude Code Action). Pick the one that matches your tooling.
+The fix-loop workflow ships runtime-agnostic and disabled by default. `df-github-init` writes a clearly marked `AGENT RUNTIME PLACEHOLDER` step inside `.github/workflows/pr-fix-loop.yml` with three commented examples (Cursor CLI, Cursor Cloud, Claude Code Action). Pick the one that matches your tooling, replace the placeholder, and set `DF_MERGE_RUNTIME_CONFIGURED: "true"`. Until then, the workflow exits successfully without attempting fixes.
+
+## Maintaining This Skill Pack
+
+This repository validates itself with `.github/workflows/validate.yml`. The validation checks:
+
+- `SKILL.md` frontmatter and required section order
+- referenced sibling files in skill docs
+- required coordinator/subagent delegation guidance for heavy-work skills
+- generated GitHub workflow YAML syntax
+- `install.sh` smoke behavior: first install, idempotent reinstall, and selective reinstall after a changed skill
+
+Run the same checks locally with:
+
+```bash
+python -m pip install pyyaml  # needed for workflow YAML parse checks
+python scripts/validate_skill_pack.py
+bash scripts/smoke_install.sh
+```
 
 ## Updating the Skill Pack in a Target Project
 

@@ -23,7 +23,7 @@ Find and fix issues before evidence collection and PR creation.
 ## Workflow
 
 1. Read `spec.md`, `state.md`, and the current diff.
-2. Launch a review subagent with the spec, the diff, and the acceptance criteria.
+2. Launch a review subagent or agent team with the spec, the diff, and the acceptance criteria.
 3. Categorize findings:
    - critical: must fix now
    - suggestion: should improve if low risk
@@ -33,6 +33,15 @@ Find and fix issues before evidence collection and PR creation.
 6. Re-run tests and relevant checks.
 7. Launch a fresh review subagent.
 8. Repeat until no critical findings remain.
+
+## Delegation Model
+
+The main agent is the review coordinator. It should not be the only reviewer for non-trivial diffs.
+
+- Launch at least one subagent review pass for every review phase; use parallel specialist reviewers when the diff spans multiple domains.
+- Ask reviewers to return findings categorized as critical, suggestion, or optional, with file paths and acceptance-criteria impact.
+- The coordinator deduplicates findings, decides which fixes are in scope, records review notes, and routes scoped fixes.
+- After fixes, launch a fresh review subagent instead of relying on the same main-context judgment.
 
 ## Outputs
 
@@ -47,6 +56,7 @@ Find and fix issues before evidence collection and PR creation.
 - Do not ignore failing tests while closing review issues.
 - If a requested fix would expand scope, stop and ask the user.
 - Do not collapse multiple critical findings into one fix commit; keep changes scoped.
+- Prefer subagents or agent teams for review passes; the coordinator owns categorization, scope control, and state updates.
 
 ## Handoff
 

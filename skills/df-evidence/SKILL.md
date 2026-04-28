@@ -43,6 +43,15 @@ Produce reusable, kind-appropriate proof that the story satisfies every acceptan
 4. Write `docs/specs/<ticket>/evidence/INDEX.md` mapping each criterion to the file(s) that prove it.
 5. Update `state.md` with `status: evidencing` -> ready to call `df-preflight`, and the count of criteria still missing evidence.
 
+## Delegation Model
+
+The main agent coordinates the evidence plan and final `INDEX.md`. Prefer subagents or agent teams for evidence capture so each worker can focus on one evidence kind or acceptance criterion.
+
+- Use a browser-capable subagent for UI evidence and ask it to return saved screenshot paths plus the criterion proven.
+- Use API, CLI, unit, or migration specialist subagents when those evidence kinds can be captured independently.
+- The coordinator verifies every acceptance criterion has observable proof, writes `evidence/INDEX.md`, and records blockers in `state.md`.
+- Do not let one agent accumulate all app-running, browser, API, and test-output context unless the evidence plan is trivial.
+
 ## Outputs
 
 - Per-kind evidence files under `docs/specs/<ticket>/evidence/<kind>/`.
@@ -56,6 +65,7 @@ Produce reusable, kind-appropriate proof that the story satisfies every acceptan
 - Use descriptive, stable file names (`criterion-1-toggle-on.png`, not `screenshot-2026-04-19-1.png`).
 - If the app cannot be run or reached for a `ui` or `api` criterion, stop and record the blocker in `state.md`.
 - If a criterion does not fit any of the five kinds, stop and ask the user; do not invent a sixth kind silently.
+- Prefer subagents or agent teams for evidence capture; the coordinator owns coverage mapping and final synthesis.
 
 ## Handoff
 

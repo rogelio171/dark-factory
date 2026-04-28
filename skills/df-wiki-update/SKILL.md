@@ -1,6 +1,6 @@
 ---
 name: df-wiki-update
-description: Folds the merged story's lessons into the project wiki by appending new patterns, entities, architecture notes, and a dated log entry, then updating the wiki index. Use after a story merges (invoked by `df-merge`) or when the user wants to refresh the wiki from a recently shipped change.
+description: Folds the merged story's lessons into the project wiki by appending new patterns, entities, architecture notes, and a dated log entry, then updating the wiki index. Use when a story has merged or the user wants to refresh the wiki from a recently shipped change.
 ---
 
 # DF Wiki Update

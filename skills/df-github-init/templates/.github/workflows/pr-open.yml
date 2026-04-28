@@ -16,19 +16,52 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Apply risk and auto-merge labels from PR body
+        id: risk
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           set -euo pipefail
+
+          has_label() {
+            gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name' | grep -Fxq "$1"
+          }
+
+          remove_label_if_present() {
+            local label="$1"
+            if has_label "$label"; then
+              gh pr edit "$PR_NUMBER" --remove-label "$label"
+            fi
+          }
+
           risk="$(printf '%s' "$PR_BODY" | grep -iE '^[[:space:]]*-?[[:space:]]*risk:[[:space:]]*(low|medium|high)' | head -n1 | sed -E 's/.*risk:[[:space:]]*//I' | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]' || true)"
-          if [ -n "$risk" ]; then
-            gh pr edit "$PR_NUMBER" --add-label "risk:$risk" || true
+          if [ -z "$risk" ]; then
+            echo "::error title=Missing risk::PR body must include '- Risk: low|medium|high'."
+            exit 1
           fi
+
+          remove_label_if_present "risk:low"
+          remove_label_if_present "risk:medium"
+          remove_label_if_present "risk:high"
+          gh pr edit "$PR_NUMBER" --add-label "risk:$risk"
+
+          auto_merge_eligible="false"
           if printf '%s' "$PR_BODY" | grep -qiE '^[[:space:]]*-?[[:space:]]*auto[_-]merge[[:space:]]*eligible:[[:space:]]*true'; then
-            gh pr edit "$PR_NUMBER" --add-label "auto_merge_eligible" || true
+            auto_merge_eligible="true"
+            gh pr edit "$PR_NUMBER" --add-label "auto_merge_eligible"
+          else
+            remove_label_if_present "auto_merge_eligible"
           fi
+
+          can_auto_merge="false"
+          if [ "$risk" = "low" ] && [ "$auto_merge_eligible" = "true" ]; then
+            can_auto_merge="true"
+          fi
+
+          echo "risk=$risk" >> "$GITHUB_OUTPUT"
+          echo "auto_merge_eligible=$auto_merge_eligible" >> "$GITHUB_OUTPUT"
+          echo "can_auto_merge=$can_auto_merge" >> "$GITHUB_OUTPUT"
 
       - name: Request Copilot code review
         env:
@@ -41,8 +74,8 @@ jobs:
             -f reviewers='["copilot-pull-request-reviewer"]' || \
             echo "Copilot reviewer request failed (verify the bot is enabled in repo Settings -> Code review)."
 
-      - name: Arm auto-merge when eligible
-        if: contains(github.event.pull_request.labels.*.name, 'auto_merge_eligible')
+      - name: Arm auto-merge for low-risk eligible PRs
+        if: steps.risk.outputs.can_auto_merge == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
