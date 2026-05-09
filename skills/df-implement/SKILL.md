@@ -1,6 +1,6 @@
 ---
 name: df-implement
-description: Implements a story through a strict red-green-refactor TDD loop using the existing spec, making only the minimum code changes needed and recording progress in small checkpoints. Use when a story is in the implementation phase and `spec.md` already defines the slices and acceptance criteria.
+description: Implements a story through a strict red-green-refactor TDD loop using the existing spec and implementation plan, making only the minimum code changes needed and recording progress in small checkpoints. Use when a story is in the implementation phase and `spec.md` and `plan.md` already define the slices and acceptance criteria.
 ---
 
 # DF Implement
@@ -12,25 +12,29 @@ Complete the story with minimal, human-readable changes that satisfy the accepta
 ## Inputs
 
 - `docs/specs/<ticket>/spec.md` (slices, testing strategy, acceptance criteria).
+- `docs/specs/<ticket>/plan.md` (exact TDD tasks, files, commands, and commit checkpoints).
 - `docs/specs/<ticket>/state.md`.
+- `wiki/project-profile.md` for module boundaries and validation commands.
 - Nearby tests and existing project patterns (per `wiki/patterns/`).
 
 ## Preconditions
 
 - `state.md` is `status: implementing`.
 - `spec.md` exists and lists at least one vertical slice.
+- `plan.md` exists and has at least one unchecked implementation task.
 - The branch is checked out and clean.
 
 ## Workflow
 
-1. Read `spec.md`, `state.md`, and nearby tests.
-2. Pick one thin vertical slice from the spec.
+1. Read `spec.md`, `plan.md`, `state.md`, `wiki/project-profile.md`, and nearby tests.
+2. Pick the next unchecked task from `plan.md`.
 3. Write one failing test for one external behavior (Red).
-4. Make the minimum code change to pass it (Green).
-5. Re-run the test and any directly relevant checks.
-6. Refactor only while green.
-7. Record progress in `state.md` and commit in a small, related chunk.
-8. Move to the next slice.
+4. Verify the test fails for the expected reason.
+5. Make the minimum code change to pass it (Green).
+6. Re-run the test and scoped checks from `validation_commands`.
+7. Refactor only while green.
+8. Check off the completed plan step, record progress in `state.md`, and commit in a small, related chunk.
+9. Move to the next task.
 
 ## Delegation Model
 
@@ -56,6 +60,8 @@ The main agent coordinates slice selection, state updates, and final synthesis. 
 - Commit in small, related chunks after green checkpoints.
 - Do not bundle unrelated cleanup with feature work.
 - Prefer subagents or agent teams for exploration, test discovery, and validation; the coordinator owns slice boundaries and state.
+- Do not run whole-repo checks in a multi-module repo unless `state.md` says the whole repo is in scope.
+- If `plan.md` is missing or vague, stop and invoke `df-plan`.
 
 ## Handoff
 
@@ -64,3 +70,4 @@ When all slices are green and acceptance criteria are covered, advance `state.md
 ## Files
 
 - For detailed TDD guidance, see [REFERENCE.md](REFERENCE.md).
+- Prompt template for implementation subagents: `prompts/implementer.md`.

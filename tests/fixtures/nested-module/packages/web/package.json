@@ -1,0 +1,9 @@
+{
+  "name": "web-fixture",
+  "private": true,
+  "scripts": {
+    "lint": "echo web lint",
+    "test": "echo web test",
+    "build": "echo web build"
+  }
+}

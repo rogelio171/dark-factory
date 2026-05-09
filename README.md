@@ -31,6 +31,8 @@ Each story gets a working directory under `docs/specs/` with a `spec.md`, `state
 
 Dark Factory uses a Karpathy-style wiki under `wiki/` to store architecture, stack, patterns, and domain entities. The goal is to accumulate project knowledge instead of rediscovering it every time.
 
+`wiki/project-profile.md` records repository layout, module boundaries, target working roots, and validation commands so Dark Factory does not accidentally run checks or make changes across unrelated sibling modules.
+
 ### 3. TDD and vertical slices keep changes small
 
 The implementation workflow is intentionally conservative: one test, one behavior, one minimum code change, then repeat.
@@ -42,11 +44,15 @@ Dark Factory is designed to keep the main agent's context small. The main agent 
 ## Included Skills
 
 - `dark-factory`: entry point and workflow orchestrator
+- `using-dark-factory`: conservative activation guidance
 - `df-wiki-init`: bootstrap or refresh the project wiki
+- `df-project-profile`: record module layout and scoped validation commands
 - `df-story-intake`: retrieve a Jira story and initialize local story state
+- `df-workspace`: record or create a safe story workspace
 - `df-grill-me`: reusable one-question-at-a-time interview skill
 - `df-clarify`: story-specific clarification using ticket and wiki context
 - `df-spec`: create the durable PRD and state files, including risk classification
+- `df-plan`: create the exact implementation plan
 - `df-implement`: implement through a strict red-green-refactor loop
 - `df-review`: run a spec-aware review/fix/re-review loop
 - `df-evidence`: collect multi-kind evidence (UI, API, CLI, unit, migration)
@@ -68,11 +74,15 @@ dark-factory/
 │   └── WORKFLOW.md
 └── skills/
     ├── dark-factory/
+    ├── using-dark-factory/
     ├── df-wiki-init/
+    ├── df-project-profile/
     ├── df-story-intake/
+    ├── df-workspace/
     ├── df-grill-me/
     ├── df-clarify/
     ├── df-spec/
+    ├── df-plan/
     ├── df-implement/
     ├── df-review/
     ├── df-evidence/
@@ -101,7 +111,7 @@ Before using it in a target project, make sure the following are available:
 Install the skill pack into a target project:
 
 ```bash
-./install.sh /path/to/target-project
+./install.sh --target /path/to/target-project
 ```
 
 If no path is provided, the current directory is used as the target.
@@ -111,6 +121,8 @@ Pass `--with-github` to print the follow-up command that scaffolds the GitHub-si
 ```bash
 ./install.sh --with-github /path/to/target-project
 ```
+
+Use `--dry-run` to preview changes. The installer refuses suspicious targets such as `/`, `$HOME`, or directories without project markers unless `--force` is passed.
 
 The installer copies each skill directory into:
 
@@ -160,6 +172,7 @@ This is the long-lived project knowledge base.
 ```text
 docs/specs/<ticket-slug>/
 ├── spec.md
+├── plan.md
 ├── state.md
 ├── preflight.json
 ├── reviews/
@@ -213,10 +226,13 @@ Resume Dark Factory for the current in-progress story.
 The `dark-factory` skill decides what phase to run next:
 
 - If `wiki/` is missing, it starts with `df-wiki-init`.
+- If module scope is missing, it uses `df-project-profile`.
 - If `.github/workflows/pr-checks.yml` is missing in the target repo, it suggests `df-github-init`.
 - If the story has not been initialized, it uses `df-story-intake`.
+- If the workspace has not been recorded, it uses `df-workspace`.
 - If requirements are unclear, it uses `df-clarify`.
 - If `spec.md` is missing or incomplete, it uses `df-spec`.
+- If `plan.md` is missing, it uses `df-plan`.
 - If the story is ready to build, it uses `df-implement`.
 - If implementation needs review, it uses `df-review`.
 - If review is clean, it uses `df-evidence`.
@@ -376,13 +392,13 @@ This repository validates itself with `.github/workflows/validate.yml`. The vali
 - required coordinator/subagent delegation guidance for heavy-work skills
 - generated GitHub workflow YAML syntax
 - `install.sh` smoke behavior: first install, idempotent reinstall, and selective reinstall after a changed skill
+- `tests/fixtures/` and `tests/prompts/` hold lightweight multi-module and behavior-eval fixtures for future adversarial checks
 
 Run the same checks locally with:
 
 ```bash
 python -m pip install pyyaml  # needed for workflow YAML parse checks
-python scripts/validate_skill_pack.py
-bash scripts/smoke_install.sh
+bash scripts/run-tests.sh
 ```
 
 ## Updating the Skill Pack in a Target Project
@@ -390,10 +406,10 @@ bash scripts/smoke_install.sh
 If you make changes to this repository and want to refresh the installed copy in a target project, run the installer again:
 
 ```bash
-./install.sh /path/to/target-project
+./install.sh --target /path/to/target-project
 ```
 
-The installer replaces the existing skill directories in `.agents/skills/`.
+The installer skips unchanged skills, atomically replaces changed skill directories in `.agents/skills/`, and writes `.agents/skills/.dark-factory-version`.
 
 ## Troubleshooting
 

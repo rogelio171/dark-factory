@@ -12,7 +12,8 @@ Recover the current story state from disk (and from GitHub when a PR is already 
 ## Inputs
 
 - `docs/specs/*/state.md` for every active story.
-- `spec.md`, `reviews/`, `evidence/`, and `preflight.json` for the chosen story.
+- `spec.md`, `plan.md`, `reviews/`, `evidence/`, and `preflight.json` for the chosen story.
+- `wiki/project-profile.md`.
 - `gh pr view <pr_number>` if `state.md` records an open PR.
 
 ## Preconditions
@@ -26,6 +27,7 @@ Recover the current story state from disk (and from GitHub when a PR is already 
 3. Identify the most recent in-progress story or ask the user which one to resume.
 4. Read the supporting artifacts for that story:
    - `spec.md`
+   - `plan.md`
    - `reviews/`
    - `evidence/INDEX.md`
    - `preflight.json`
@@ -43,6 +45,7 @@ Recover the current story state from disk (and from GitHub when a PR is already 
 
 - Treat `state.md` as the primary resume source.
 - If the repo state and `state.md` disagree, stop and reconcile first.
+- If module scope in `state.md` no longer matches `wiki/project-profile.md`, refresh the profile before continuing.
 - If GitHub says the PR has merged but `state.md` is still `merging`, run `df-wiki-update` and advance to `complete` rather than re-running `df-merge`.
 - Prefer the safest next action over the fastest one.
 
@@ -51,8 +54,10 @@ Recover the current story state from disk (and from GitHub when a PR is already 
 Resume into the phase named in `state.md`:
 
 - `intake` -> `df-story-intake`
+- `workspace` -> `df-workspace`
 - `clarifying` -> `df-clarify`
 - `specifying` -> `df-spec`
+- `planning` -> `df-plan`
 - `implementing` -> `df-implement`
 - `reviewing` -> `df-review`
 - `evidencing` -> `df-evidence`

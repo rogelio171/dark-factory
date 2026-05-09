@@ -1,0 +1,1 @@
+Resume Dark Factory for the active story. Read state.md, spec.md, plan.md, reviews, evidence, and preflight.json before deciding the next phase.

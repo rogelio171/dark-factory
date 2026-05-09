@@ -1,6 +1,6 @@
 ---
 name: df-spec
-description: Creates a durable story PRD in `docs/specs/` with implementation slices, test intent, evidence plan, and a risk classification used by `df-ship` to decide auto-merge eligibility. Use when a Jira story is clear enough to plan implementation or when a detailed `spec.md` is missing.
+description: Creates a durable story PRD in `docs/specs/` with module scope, implementation slices, test intent, evidence plan, and a risk classification used by `df-ship` to decide auto-merge eligibility. Use when a Jira story is clear enough to plan implementation or when a detailed `spec.md` is missing.
 ---
 
 # DF Spec
@@ -13,6 +13,7 @@ Write `docs/specs/<ticket-slug>/spec.md` and `docs/specs/<ticket-slug>/state.md`
 
 - The Jira ticket and any clarifications captured by `df-clarify`.
 - Relevant `wiki/` pages (architecture, patterns, stack, entities).
+- `wiki/project-profile.md` for module boundaries and validation commands.
 - The repository's `.github/CODEOWNERS` if it exists.
 
 ## Preconditions
@@ -23,16 +24,18 @@ Write `docs/specs/<ticket-slug>/spec.md` and `docs/specs/<ticket-slug>/state.md`
 ## Workflow
 
 1. Read the Jira story, clarification notes, and relevant wiki pages.
-2. Sketch the planned diff at the path level (which directories and files will change).
-3. Compute the risk level using the rules in "Risk Classification" below.
-4. Create or update `spec.md` from `templates/spec-template.md`, filling the `Risk Assessment` and `Evidence Plan` sections.
-5. Keep the original acceptance criteria visible and traceable.
-6. Break the work into thin vertical slices with checkboxes.
-7. Update `state.md` with the new fields:
+2. Read `wiki/project-profile.md` and copy the selected module scope into `state.md`.
+3. Sketch the planned diff at the path level (which directories and files will change).
+4. Compute the risk level using the rules in "Risk Classification" below.
+5. Create or update `spec.md` from `templates/spec-template.md`, filling the `Module Scope`, `Risk Assessment`, and `Evidence Plan` sections.
+6. Keep the original acceptance criteria visible and traceable.
+7. Break the work into thin vertical slices with checkboxes.
+8. Update `state.md` with the new fields:
    - `risk: low | medium | high`
    - `auto_merge_eligible: true | false`
+   - `target_modules` and `validation_commands`
    - reviewer requirements beyond Copilot
-8. Record current progress and the next safe step.
+9. Record current progress and the next safe step.
 
 ## Risk Classification
 
@@ -74,10 +77,11 @@ When `risk` is `medium` or `high`, list the human reviewers required beyond Copi
 - Mark the story phase as `specifying` while this skill is active.
 - Never mark `auto_merge_eligible: true` without a green Testing Strategy section.
 - If the planned diff is unknown (the story is exploratory), set `risk: medium` by default and document why in the spec.
+- Do not leave `target_modules` or `validation_commands` blank unless the user confirms the whole repo is the target.
 
 ## Handoff
 
-When `spec.md` and `state.md` are complete, advance the story to `status: implementing` and invoke `df-implement`.
+When `spec.md` and `state.md` are complete, advance the story to `status: planning` and invoke `df-plan`.
 
 ## Files
 

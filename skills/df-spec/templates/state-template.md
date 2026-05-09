@@ -8,7 +8,20 @@ risk: low
 auto_merge_eligible: false
 started: YYYY-MM-DD
 last_updated: YYYY-MM-DDTHH:MM:SSZ
+repo_root: absolute-repo-root
+working_root: absolute-or-relative-working-root
+workspace_path: absolute-workspace-path-or-empty
+workspace_isolated: false
+target_modules:
+  - module-path-or-repo-root
+validation_commands:
+  lint: command-or-empty
+  typecheck: command-or-empty
+  test: command-or-empty
+  build: command-or-empty
+module_scope_notes: ""
 spec_path: docs/specs/{{ticket-slug}}/spec.md
+plan_path: docs/specs/{{ticket-slug}}/plan.md
 review_path: docs/specs/{{ticket-slug}}/reviews
 evidence_path: docs/specs/{{ticket-slug}}/evidence
 preflight_path: docs/specs/{{ticket-slug}}/preflight.json
@@ -22,8 +35,10 @@ merge_sha: ""
 ## Phase Checklist
 
 - [ ] intake
+- [ ] workspace
 - [ ] clarifying
 - [ ] specifying
+- [ ] planning
 - [ ] implementing
 - [ ] reviewing
 - [ ] evidencing
@@ -48,6 +63,15 @@ merge_sha: ""
 ## Decisions
 
 - Decision 1
+
+## Module Scope
+
+- Repo root:
+- Working root:
+- Workspace path:
+- Target modules:
+- Validation commands:
+- Scope notes:
 
 ## Blockers
 

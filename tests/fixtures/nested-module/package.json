@@ -1,0 +1,10 @@
+{
+  "name": "nested-module-fixture",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test:web": "npm --workspace packages/web test"
+  }
+}

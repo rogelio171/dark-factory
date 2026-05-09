@@ -37,7 +37,8 @@ Create `wiki/` as the durable project knowledge layer, or refresh it after meani
    - naming and file conventions
    - domain entities and workflows
 3. Create or update wiki pages in the correct directories.
-4. Update `wiki/index.md` and append `wiki/log.md`.
+4. Invoke `df-project-profile` if `wiki/project-profile.md` is missing or the repo layout changed.
+5. Update `wiki/index.md` and append `wiki/log.md`.
 
 ## Delegation Model
 
@@ -60,6 +61,7 @@ The main agent coordinates wiki creation and keeps the final wiki concise. For e
 - Keep the wiki concise enough to scan, but complete enough for another agent to continue work.
 - If the repo is very large, summarize by subsystem instead of trying to mirror every file.
 - Prefer subagents or agent teams for repository exploration; the main agent should coordinate and synthesize.
+- For multi-module repositories, treat module boundaries and validation commands as first-class wiki knowledge.
 
 ## Handoff
 
@@ -68,3 +70,4 @@ When the wiki is in place, return to the orchestrator. The next phase is normall
 ## Files
 
 - Templates live in `templates/`.
+- Module scope is recorded in `wiki/project-profile.md` by `df-project-profile`.

@@ -1,40 +1,30 @@
-<!--
-This template is read by Copilot's review, the pr-open workflow, and the
-df-merge auto-fix loop. Keep the section headings exactly as-is.
--->
-
 ## Summary
 
-<!-- One paragraph: what changed and why. Reference the Jira ticket. -->
+- 
 
-## Test plan
+## Story
 
-<!-- Bullet list of how this change is tested. Include the unit/integration/UI
-     evidence files from docs/specs/<ticket>/evidence/ when relevant. -->
+- Jira:
+- Spec: `docs/specs/<ticket>/spec.md`
+- Plan: `docs/specs/<ticket>/plan.md`
 
-- [ ]
-- [ ]
+## Module Scope
+
+- Target modules:
+- Out-of-scope modules:
 
 ## Evidence
 
-<!-- Links to evidence files captured by df-evidence. -->
+- Evidence log:
+- Acceptance criteria covered:
 
-- UI: 
-- API: 
-- CLI: 
-- Unit: 
-- Migration: 
+## Preflight
 
-## Risk
+- Preflight file: `docs/specs/<ticket>/preflight.json`
+- Commands run:
 
-<!-- Set by df-spec. The pr-open workflow reads these lines verbatim. -->
+## Test Plan
 
-- Risk: low <!-- low | medium | high -->
-- Auto-merge eligible: false <!-- true | false -->
-- Reviewers required beyond Copilot: 
-
-## Related
-
-- Jira: 
-- Spec: docs/specs/<ticket-slug>/spec.md
-- State: docs/specs/<ticket-slug>/state.md
+- [ ] Module-scoped lint/typecheck/test/build completed
+- [ ] Evidence reviewed
+- [ ] No unrelated modules changed

@@ -8,219 +8,58 @@ concurrency:
   group: pr-checks-${{ github.ref }}
   cancel-in-progress: true
 
+# Replace placeholder command blocks with values from wiki/project-profile.md.
+# Keep job names stable if they are required by branch protection.
+
 jobs:
   lint:
     name: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Detect and run lint
+      - name: Run module-scoped lint
         run: |
           set -euo pipefail
-
-          has_js_script() {
-            jq -e --arg script "$1" '.scripts[$script]' package.json >/dev/null 2>&1
-          }
-
-          install_js_deps() {
-            if [ -f pnpm-lock.yaml ]; then
-              corepack enable
-              pnpm install --frozen-lockfile
-            elif [ -f yarn.lock ]; then
-              corepack enable
-              yarn install --immutable || yarn install --frozen-lockfile
-            elif [ -f package-lock.json ]; then
-              npm ci --no-audit --no-fund
-            else
-              npm install --no-audit --no-fund
-            fi
-          }
-
-          run_js_script() {
-            if [ -f pnpm-lock.yaml ]; then
-              pnpm "$1"
-            elif [ -f yarn.lock ]; then
-              yarn "$1"
-            else
-              npm run "$1"
-            fi
-          }
-
-          if [ -f package.json ] && has_js_script lint; then
-            install_js_deps
-            run_js_script lint
-          elif [ -f pyproject.toml ] && grep -qi ruff pyproject.toml; then
-            python -m pip install ruff
-            ruff check .
-          elif [ -f go.mod ]; then
-            go vet ./...
-          elif [ -f Cargo.toml ]; then
-            cargo fmt --all -- --check
-            cargo clippy --all-targets -- -D warnings
-          elif [ -f Makefile ] && grep -qE '^lint:' Makefile; then
-            make lint
-          else
-            echo "No lint tooling detected; skipping."
-          fi
+          # Example:
+          # (cd packages/app && npm run lint)
+          echo "Configure lint commands from wiki/project-profile.md"
 
   typecheck:
     name: typecheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Detect and run typecheck
+      - name: Run module-scoped typecheck
         run: |
           set -euo pipefail
-
-          has_js_script() {
-            jq -e --arg script "$1" '.scripts[$script]' package.json >/dev/null 2>&1
-          }
-
-          install_js_deps() {
-            if [ -f pnpm-lock.yaml ]; then
-              corepack enable
-              pnpm install --frozen-lockfile
-            elif [ -f yarn.lock ]; then
-              corepack enable
-              yarn install --immutable || yarn install --frozen-lockfile
-            elif [ -f package-lock.json ]; then
-              npm ci --no-audit --no-fund
-            else
-              npm install --no-audit --no-fund
-            fi
-          }
-
-          run_js_script() {
-            if [ -f pnpm-lock.yaml ]; then
-              pnpm "$1"
-            elif [ -f yarn.lock ]; then
-              yarn "$1"
-            else
-              npm run "$1"
-            fi
-          }
-
-          if [ -f package.json ] && has_js_script typecheck; then
-            install_js_deps
-            run_js_script typecheck
-          elif [ -f tsconfig.json ]; then
-            if [ -f package.json ]; then
-              install_js_deps
-            fi
-            npx --yes tsc --noEmit
-          elif [ -f pyproject.toml ] && grep -q mypy pyproject.toml; then
-            python -m pip install mypy
-            mypy .
-          else
-            echo "No typecheck tooling detected; skipping."
-          fi
+          # Example:
+          # (cd packages/app && npm run typecheck)
+          echo "Configure typecheck commands from wiki/project-profile.md"
 
   test:
     name: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Detect and run tests
+      - name: Run module-scoped tests
         run: |
           set -euo pipefail
-
-          has_js_script() {
-            jq -e --arg script "$1" '.scripts[$script]' package.json >/dev/null 2>&1
-          }
-
-          install_js_deps() {
-            if [ -f pnpm-lock.yaml ]; then
-              corepack enable
-              pnpm install --frozen-lockfile
-            elif [ -f yarn.lock ]; then
-              corepack enable
-              yarn install --immutable || yarn install --frozen-lockfile
-            elif [ -f package-lock.json ]; then
-              npm ci --no-audit --no-fund
-            else
-              npm install --no-audit --no-fund
-            fi
-          }
-
-          run_js_script() {
-            if [ -f pnpm-lock.yaml ]; then
-              pnpm "$1"
-            elif [ -f yarn.lock ]; then
-              yarn "$1"
-            else
-              npm run "$1"
-            fi
-          }
-
-          if [ -f package.json ] && has_js_script test; then
-            install_js_deps
-            run_js_script test
-          elif [ -f pyproject.toml ] || [ -f setup.py ]; then
-            python -m pip install -e '.[test]' || python -m pip install -e .
-            python -m pytest -q
-          elif [ -f go.mod ]; then
-            go test ./...
-          elif [ -f Cargo.toml ]; then
-            cargo test --all
-          elif [ -f Makefile ] && grep -qE '^test:' Makefile; then
-            make test
-          else
-            echo "No test tooling detected; failing closed."
-            exit 1
-          fi
+          # Example:
+          # (cd packages/app && npm test)
+          echo "Configure test commands from wiki/project-profile.md"
+          exit 1
 
   build:
     name: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Detect and run build
+      - name: Run module-scoped build
         run: |
           set -euo pipefail
-
-          has_js_script() {
-            jq -e --arg script "$1" '.scripts[$script]' package.json >/dev/null 2>&1
-          }
-
-          install_js_deps() {
-            if [ -f pnpm-lock.yaml ]; then
-              corepack enable
-              pnpm install --frozen-lockfile
-            elif [ -f yarn.lock ]; then
-              corepack enable
-              yarn install --immutable || yarn install --frozen-lockfile
-            elif [ -f package-lock.json ]; then
-              npm ci --no-audit --no-fund
-            else
-              npm install --no-audit --no-fund
-            fi
-          }
-
-          run_js_script() {
-            if [ -f pnpm-lock.yaml ]; then
-              pnpm "$1"
-            elif [ -f yarn.lock ]; then
-              yarn "$1"
-            else
-              npm run "$1"
-            fi
-          }
-
-          if [ -f package.json ] && has_js_script build; then
-            install_js_deps
-            run_js_script build
-          elif [ -f pyproject.toml ] && grep -q 'build-system' pyproject.toml; then
-            python -m pip install build
-            python -m build
-          elif [ -f go.mod ]; then
-            go build ./...
-          elif [ -f Cargo.toml ]; then
-            cargo build --all-targets
-          elif [ -f Makefile ] && grep -qE '^build:' Makefile; then
-            make build
-          else
-            echo "No build tooling detected; skipping."
-          fi
+          # Example:
+          # (cd packages/app && npm run build)
+          echo "Configure build commands from wiki/project-profile.md"
 
   security:
     name: security
@@ -236,23 +75,6 @@ jobs:
       - name: Dependency audit
         run: |
           set -euo pipefail
-          if [ -f package-lock.json ]; then
-            npm ci --no-audit --no-fund
-            npm audit --omit=dev --audit-level=critical
-          elif [ -f pnpm-lock.yaml ]; then
-            corepack enable
-            pnpm install --frozen-lockfile
-            pnpm audit --prod --audit-level critical
-          elif [ -f yarn.lock ]; then
-            corepack enable
-            yarn install --immutable || yarn install --frozen-lockfile
-            yarn npm audit --severity critical
-          elif [ -f Cargo.toml ]; then
-            cargo install cargo-audit --locked --quiet
-            cargo audit --deny warnings
-          elif [ -f pyproject.toml ] || [ -f requirements.txt ]; then
-            python -m pip install pip-audit
-            pip-audit --strict
-          else
-            echo "No dependency manifest detected; skipping audit."
-          fi
+          # Example:
+          # (cd packages/app && npm audit --omit=dev --audit-level=critical)
+          echo "Configure dependency audits from wiki/project-profile.md"

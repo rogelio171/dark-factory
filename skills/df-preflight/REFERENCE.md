@@ -7,6 +7,9 @@
   "ticket": "OFRS2-12345",
   "branch": "OFRS2-12345-add-dark-mode-toggle",
   "ran_at": "2026-04-19T19:55:00Z",
+  "repo_root": "/path/to/repo",
+  "working_root": "packages/app",
+  "target_modules": ["packages/app"],
   "merge_base": "abc1234",
   "head": "def5678",
   "summary": "passed | failed | passed-with-warnings",
@@ -14,6 +17,7 @@
     {
       "name": "lint",
       "command": "npm run lint",
+      "cwd": "packages/app",
       "status": "passed | failed | skipped | warning",
       "duration_ms": 4231,
       "exit_code": 0,
@@ -37,14 +41,14 @@
 | `package.json` with script + `pnpm-lock.yaml` | `pnpm lint` | `pnpm typecheck` | `pnpm test` | `pnpm build` |
 | `package.json` with script + `yarn.lock` | `yarn lint` | `yarn typecheck` | `yarn test` | `yarn build` |
 | `package.json` with script only | `npm run lint` after `npm install` | `npm run typecheck` or `npx tsc --noEmit` after `npm install` | `npm test` after `npm install` | `npm run build` after `npm install` |
-| `pyproject.toml` with `ruff` | `ruff check .` | `mypy .` if configured | `pytest -q` | `python -m build` if configured |
-| `pyproject.toml` only | `flake8` if installed | `mypy .` if configured | `pytest -q` | skipped |
-| `go.mod` | `go vet ./...` | (covered by build) | `go test ./...` | `go build ./...` |
+| `pyproject.toml` with `ruff` | `ruff check .` from module root | `mypy .` from module root if configured | `pytest -q` from module root | `python -m build` from module root if configured |
+| `pyproject.toml` only | `flake8` from module root if installed | `mypy .` from module root if configured | `pytest -q` from module root | skipped |
+| `go.mod` | `go vet ./...` from module root | (covered by build) | `go test ./...` from module root | `go build ./...` from module root |
 | `Cargo.toml` | `cargo fmt --check` then `cargo clippy --all-targets -- -D warnings` | (covered by check) | `cargo test --all` | `cargo build --all-targets` |
 | `Makefile` with target | `make lint` | `make typecheck` | `make test` | `make build` |
 | Nothing detected | skipped with reason `"no lint tooling detected"` | skipped | skipped | skipped |
 
-If multiple manifests are present, run all that apply (e.g., a polyglot repo with `package.json` and `pyproject.toml`).
+If multiple manifests are present, run only those selected by `target_modules` in `state.md`. Run all that apply only when `wiki/project-profile.md` records the whole repo as the intended scope.
 
 ## Security scans
 

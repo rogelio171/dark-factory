@@ -5,6 +5,7 @@
 Each story lives under `docs/specs/<ticket-slug>/` and should contain:
 
 - `spec.md`: durable PRD and execution checklist.
+- `plan.md`: exact implementation plan with scoped commands and TDD checkpoints.
 - `state.md`: current workflow phase and resume metadata (uses the schema below).
 - `preflight.json`: machine-readable result of the local CI mirror (written by `df-preflight`).
 - `evidence/{ui,api,cli,unit,migration}/`: per-kind evidence files plus an `INDEX.md` map.
@@ -23,7 +24,20 @@ risk: low
 auto_merge_eligible: false
 started: 2026-04-13
 last_updated: 2026-04-13T14:30:00Z
+repo_root: /path/to/repo
+working_root: /path/to/repo/packages/app
+workspace_path: /path/to/worktree-or-repo
+workspace_isolated: false
+target_modules:
+  - packages/app
+validation_commands:
+  lint: npm run lint
+  typecheck: npm run typecheck
+  test: npm test
+  build: npm run build
+module_scope_notes: "Only validate packages/app unless shared packages change."
 spec_path: docs/specs/OFRS2-12345-add-dark-mode-toggle/spec.md
+plan_path: docs/specs/OFRS2-12345-add-dark-mode-toggle/plan.md
 review_path: docs/specs/OFRS2-12345-add-dark-mode-toggle/reviews
 evidence_path: docs/specs/OFRS2-12345-add-dark-mode-toggle/evidence
 preflight_path: docs/specs/OFRS2-12345-add-dark-mode-toggle/preflight.json
@@ -36,15 +50,17 @@ merge_sha: ""
 ## Phase Order
 
 1. `intake`
-2. `clarifying`
-3. `specifying`
-4. `implementing`
-5. `reviewing`
-6. `evidencing`
-7. `preflight`
-8. `shipping`
-9. `merging`
-10. `complete`
+2. `workspace`
+3. `clarifying`
+4. `specifying`
+5. `planning`
+6. `implementing`
+7. `reviewing`
+8. `evidencing`
+9. `preflight`
+10. `shipping`
+11. `merging`
+12. `complete`
 
 `blocked` is a non-linear status set by any phase that hits an unrecoverable problem (security comment, scope expansion, closed PR, non-converging auto-fix loop). `df-resume` reads it and routes back to the right place.
 
@@ -52,9 +68,11 @@ merge_sha: ""
 
 | `status` | Skill |
 | --- | --- |
-| `intake` | `df-clarify` (or `df-spec` directly if the ticket is clear) |
+| `intake` | `df-workspace` |
+| `workspace` | `df-clarify` (or `df-spec` directly if the ticket is clear) |
 | `clarifying` | `df-clarify` |
 | `specifying` | `df-spec` |
+| `planning` | `df-plan` |
 | `implementing` | `df-implement` |
 | `reviewing` | `df-review` |
 | `evidencing` | `df-evidence` |
@@ -67,6 +85,7 @@ merge_sha: ""
 Bootstrap rules (orthogonal to `status`):
 
 - If `wiki/` is missing, run `df-wiki-init` first.
+- If `wiki/project-profile.md` is missing or stale, run `df-project-profile`.
 - If `.github/workflows/pr-checks.yml` is missing, suggest `df-github-init` (do not auto-run).
 
 ## Risk Gating
@@ -82,10 +101,11 @@ Bootstrap rules (orthogonal to `status`):
 ## Resume Rules
 
 - Trust `state.md` as the source of truth.
-- Read the latest `spec.md`, review notes, evidence index, and `preflight.json` before continuing.
+- Read the latest `spec.md`, `plan.md`, review notes, evidence index, and `preflight.json` before continuing.
 - If `pr_url` is set, fetch live PR status via `gh pr view` and reconcile.
 - If `state.md` says `merging` but `gh pr view` reports `MERGED`, run `df-wiki-update` and advance to `complete` instead of re-running `df-merge`.
 - If the repository state conflicts with `state.md`, stop and reconcile before proceeding.
+- If `target_modules` or `working_root` no longer match `wiki/project-profile.md`, refresh the profile before continuing.
 
 ## External Dependencies
 

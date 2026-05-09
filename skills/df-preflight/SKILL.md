@@ -1,6 +1,6 @@
 ---
 name: df-preflight
-description: Mirrors CI locally before opening the PR by running lint, typecheck, test, build, secret scan, dependency audit, and commit-message lint, and writing a structured `preflight.json` for `df-ship` to consume. Use when implementation, review, and evidence are complete and the story is about to be shipped.
+description: Mirrors CI locally before opening the PR by running module-scoped lint, typecheck, test, build, secret scan, dependency audit, and commit-message lint, and writing a structured `preflight.json` for `df-ship` to consume. Use when implementation, review, and evidence are complete and the story is about to be shipped.
 ---
 
 # DF Preflight
@@ -12,7 +12,9 @@ Catch every failure that CI would catch, before the PR exists, and write a machi
 ## Inputs
 
 - `docs/specs/<ticket>/spec.md`
+- `docs/specs/<ticket>/plan.md`
 - `docs/specs/<ticket>/state.md` (must have `status: evidencing` or later)
+- `wiki/project-profile.md`
 - The current branch's commit range vs. the merge base
 
 ## Preconditions
@@ -23,25 +25,26 @@ Catch every failure that CI would catch, before the PR exists, and write a machi
 
 ## Workflow
 
-1. Detect the project's tooling by reading manifests:
+1. Read `state.md`, `plan.md`, and `wiki/project-profile.md` to determine `working_root`, `target_modules`, and `validation_commands`.
+2. Build the command list from recorded validation commands. If a command is missing, detect the target module's tooling by reading manifests:
    - JS/TS: `package.json` scripts (`lint`, `typecheck`, `test`, `build`) and the package manager from `pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`, or fallback npm install.
    - Python: `pyproject.toml`, `tox.ini`, `Makefile` targets.
-   - Go: `go vet`, `go test ./...`, `go build ./...`.
-   - Rust: `cargo fmt --check`, `cargo clippy`, `cargo test`, `cargo build`.
+   - Go: module-root `go vet ./...`, `go test ./...`, `go build ./...`.
+   - Rust: module-root `cargo fmt --check`, `cargo clippy`, `cargo test`, `cargo build`.
    - Fallback: `Makefile` targets named `lint`, `test`, `build`.
-2. Run the detected commands in this order, recording exit code, duration, and the last 50 lines of output for each:
+3. Run the detected commands in this order, recording cwd, exit code, duration, and the last 50 lines of output for each:
    - lint
    - typecheck
    - test
    - build
-3. Run security scans when available:
+4. Run security scans when available:
    - `gitleaks detect --source . --no-git -v` if `gitleaks` is on `PATH`.
    - Dependency audit: `npm audit --omit=dev --json`, `pnpm audit --prod --json`, `pip-audit --format json`, `cargo audit --json`, `bundle audit check --update`. Run only when the corresponding manifest exists.
-4. Lint the branch's commit range with conventional-commits rules:
+5. Lint the branch's commit range with conventional-commits rules:
    - Compute base with `git merge-base HEAD origin/<default-branch>`.
    - For each commit in the range, validate `type(scope?): subject` (allowed types: `feat fix docs style refactor perf test build ci chore revert`).
-5. Write `docs/specs/<ticket>/preflight.json` (see REFERENCE.md for the schema).
-6. Update `state.md`:
+6. Write `docs/specs/<ticket>/preflight.json` (see REFERENCE.md for the schema).
+7. Update `state.md`:
    - On all green: `status: preflight` -> ready to call `df-ship`, `phase_detail: "preflight green"`.
    - On any failure: keep `status: preflight`, set `phase_detail: "preflight failed: <stage>"`, list the failures under "Blockers".
 
@@ -67,6 +70,8 @@ The main agent coordinates preflight and writes the final `preflight.json`. Pref
 - Do not fetch from the network beyond what the dependency audit naturally requires.
 - Stop and ask the user if `gh auth status` reports the CLI is unauthenticated, since `df-ship` will need it next.
 - Prefer subagents or agent teams for tooling detection and diagnostics; the coordinator owns the final preflight decision.
+- Avoid whole-repo fallback commands unless `target_modules` says the whole repo is in scope.
+- Secret scans may run at repo root, but note that they are intentionally repo-wide in `preflight.json`.
 
 ## Handoff
 

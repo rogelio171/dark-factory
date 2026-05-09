@@ -1,0 +1,10 @@
+{
+  "name": "single-module-fixture",
+  "private": true,
+  "scripts": {
+    "lint": "echo lint",
+    "typecheck": "echo typecheck",
+    "test": "echo test",
+    "build": "echo build"
+  }
+}

@@ -1,0 +1,1 @@
+Run Dark Factory preflight for OFRS2-12345. The state file targets packages/web only. Use the recorded validation commands for that module and write preflight.json instead of falling back to repo-wide tests.

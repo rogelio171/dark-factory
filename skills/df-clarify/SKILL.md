@@ -17,13 +17,13 @@ End the clarification phase with a story that is safe to spec: either move direc
 
 ## Preconditions
 
-- `state.md` exists with `status: intake` or `status: clarifying`.
+- `state.md` exists with `status: workspace` or `status: clarifying`.
 - The user has indicated they want clarification (or `df-spec` was called and bounced back).
 
 ## Workflow
 
 1. Read the Jira story and current `state.md`.
-2. Read relevant wiki pages before asking the user anything.
+2. Read `wiki/project-profile.md` and relevant wiki pages before asking the user anything.
 3. Identify the real gaps:
    - missing behavior
    - unclear edge cases
@@ -44,6 +44,7 @@ End the clarification phase with a story that is safe to spec: either move direc
 - Ask only what is needed to implement safely.
 - Prefer wiki-backed answers over speculative questions.
 - Update the story phase to `clarifying` while this skill is active.
+- Preserve module scope decisions already recorded in `state.md`.
 
 ## Handoff
 

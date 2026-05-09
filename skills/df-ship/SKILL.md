@@ -12,6 +12,7 @@ Open the PR with everything Copilot review and `df-merge` need to drive it to me
 ## Inputs
 
 - `docs/specs/<ticket>/spec.md`
+- `docs/specs/<ticket>/plan.md`
 - `docs/specs/<ticket>/state.md` (must include `risk` and `auto_merge_eligible`)
 - `docs/specs/<ticket>/preflight.json` (must have `summary: passed` or `summary: passed-with-warnings`)
 - `docs/specs/<ticket>/evidence/INDEX.md`
@@ -27,13 +28,14 @@ Open the PR with everything Copilot review and `df-merge` need to drive it to me
 
 ## Workflow
 
-1. Read `spec.md`, `state.md`, `preflight.json`, and `evidence/INDEX.md`.
+1. Read `spec.md`, `plan.md`, `state.md`, `preflight.json`, and `evidence/INDEX.md`.
 2. Push the current branch if it is ahead of origin: `git push -u origin HEAD`.
 3. Build the PR body from `.github/pull_request_template.md`, filling:
    - `## Summary` from the spec's Problem Statement and Implementation Approach.
    - `## Test plan` from the spec's Testing Strategy and `preflight.json` results.
    - `## Evidence` with links to each file in `evidence/INDEX.md`.
    - `## Risk` with the `risk` and `auto_merge_eligible` values from `state.md`.
+   - `## Module Scope` with `target_modules` and command roots from `state.md`.
    - `## Related` with the Jira URL and spec/state paths.
 4. Open the PR:
    ```bash
@@ -81,6 +83,7 @@ Open the PR with everything Copilot review and `df-merge` need to drive it to me
 - Never rely on the `auto_merge_eligible` label alone. Auto-merge requires both `risk: low` and `auto_merge_eligible: true` in `state.md` and the PR body.
 - Keep the PR title prefixed with the ticket ID (`OFRS2-12345: ...`).
 - If `gh pr create` reports the PR already exists, switch to `gh pr edit` and update the body and labels in place.
+- Keep module scope visible in the PR test plan.
 
 ## Handoff
 

@@ -4,8 +4,19 @@
 
 - Ticket: `{{TICKET-ID}}`
 - Branch: `{{TICKET-ID}}-{{kebab-case-title}}`
-- Status: `[ ] intake [ ] clarifying [ ] specifying [ ] implementing [ ] reviewing [ ] evidencing [ ] preflight [ ] shipping [ ] merging [ ] complete`
+- Status: `[ ] intake [ ] workspace [ ] clarifying [ ] specifying [ ] planning [ ] implementing [ ] reviewing [ ] evidencing [ ] preflight [ ] shipping [ ] merging [ ] complete`
 - Last updated: `YYYY-MM-DD`
+
+## Module Scope
+
+- Working root: `path`
+- Target modules: `module-paths`
+- Validation commands:
+  - lint:
+  - typecheck:
+  - test:
+  - build:
+- Out-of-scope modules:
 
 ## Problem Statement
 
@@ -67,6 +78,7 @@ Set `risk` and `auto_merge_eligible` in `state.md` based on the planned diff.
 - Identify the first behavior to test
 - Keep tests at the public-behavior level
 - Prefer existing nearby test patterns
+- Keep checks scoped to the target modules unless shared code changed
 
 ## Evidence Plan
 
@@ -90,6 +102,7 @@ Map each acceptance criterion to one of the supported evidence kinds (see `df-ev
 - TDD path is clear
 - Evidence plan is clear
 - Risk and auto-merge fields set in `state.md`
+- Preflight commands are module-scoped
 
 ## Out of Scope
 
