@@ -6,7 +6,7 @@ Dark Factory is a repeatable agent workflow for taking a Jira story from intake 
 
 ## Setup
 
-1. Install the skill pack into a target project with `./install.sh --target /path/to/project`.
+1. If you are on Claude Code, install via `/plugin marketplace add rogelioorona/dark-factory` and `/plugin install dark-factory@dark-factory`; otherwise install the skill pack into a target project with `./install.sh --target /path/to/project`.
 2. Make sure the target project has:
    - GitHub CLI authenticated
    - Atlassian Rovo MCP configured

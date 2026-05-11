@@ -1,0 +1,20 @@
+{
+  "name": "dark-factory",
+  "version": "0.1.0",
+  "description": "Jira-to-PR delivery workflow skills with durable story state, module-scoped validation, review, evidence, and shipping phases.",
+  "author": {
+    "name": "Rogelio Orona",
+    "url": "https://github.com/rogelioorona"
+  },
+  "homepage": "https://github.com/rogelioorona/dark-factory",
+  "repository": "https://github.com/rogelioorona/dark-factory",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "jira",
+    "delivery",
+    "workflow",
+    "preflight",
+    "agentic"
+  ]
+}

@@ -108,7 +108,37 @@ Before using it in a target project, make sure the following are available:
 
 ## Installation
 
-Install the skill pack into a target project:
+### Install as a Claude Code plugin
+
+Add this repository as a Claude Code plugin marketplace, then install Dark Factory from it:
+
+```text
+/plugin marketplace add rogelioorona/dark-factory
+/plugin install dark-factory@dark-factory
+```
+
+From a shell, use the equivalent Claude Code CLI commands:
+
+```bash
+claude plugin marketplace add rogelioorona/dark-factory
+claude plugin install dark-factory@dark-factory --scope project
+```
+
+Use `--scope project` to save the plugin enablement in the target repository's `.claude/settings.json`, or omit it to install at the user scope.
+
+Claude Code loads the skills under the plugin namespace. Common entry points include:
+
+```text
+/dark-factory:dark-factory
+/dark-factory:df-spec
+/dark-factory:df-resume
+```
+
+The Claude Code plugin metadata lives in `.claude-plugin/plugin.json`, and the single-plugin marketplace catalog lives in `.claude-plugin/marketplace.json`.
+
+### Install as a generic skill pack
+
+For Cursor or another agent that discovers skills from `.agents/skills/`, install the skill pack into a target project:
 
 ```bash
 ./install.sh --target /path/to/target-project
