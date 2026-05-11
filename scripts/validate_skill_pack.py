@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -14,6 +15,9 @@ WORKFLOW_TEMPLATE_DIR = (
     SKILLS_DIR / "df-github-init" / "templates" / ".github" / "workflows"
 )
 ROOT_WORKFLOW_DIR = ROOT / ".github" / "workflows"
+CLAUDE_PLUGIN_DIR = ROOT / ".claude-plugin"
+CLAUDE_PLUGIN_MANIFEST = CLAUDE_PLUGIN_DIR / "plugin.json"
+CLAUDE_MARKETPLACE = CLAUDE_PLUGIN_DIR / "marketplace.json"
 
 REQUIRED_SECTIONS = [
     "# ",
@@ -171,6 +175,91 @@ def validate_workflow_yaml() -> list[str]:
     return errors
 
 
+def load_json(path: Path) -> tuple[dict[str, object] | None, str | None]:
+    if not path.exists():
+        return None, "missing file"
+
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return None, f"invalid JSON: {exc}"
+
+    if not isinstance(document, dict):
+        return None, "JSON document must be an object"
+
+    return document, None
+
+
+def validate_claude_plugin() -> list[str]:
+    errors: list[str] = []
+
+    manifest, manifest_error = load_json(CLAUDE_PLUGIN_MANIFEST)
+    if manifest_error:
+        errors.append(f"{CLAUDE_PLUGIN_MANIFEST.relative_to(ROOT)}: {manifest_error}")
+        return errors
+
+    marketplace, marketplace_error = load_json(CLAUDE_MARKETPLACE)
+    if marketplace_error:
+        errors.append(f"{CLAUDE_MARKETPLACE.relative_to(ROOT)}: {marketplace_error}")
+        return errors
+
+    manifest_name = manifest.get("name") if manifest else None
+    marketplace_name = marketplace.get("name") if marketplace else None
+    plugins = marketplace.get("plugins") if marketplace else None
+
+    if not isinstance(manifest_name, str) or not manifest_name:
+        errors.append(f"{CLAUDE_PLUGIN_MANIFEST.relative_to(ROOT)}: missing name")
+    if not isinstance(marketplace_name, str) or not marketplace_name:
+        errors.append(f"{CLAUDE_MARKETPLACE.relative_to(ROOT)}: missing name")
+    elif manifest_name != marketplace_name:
+        errors.append(
+            f"{CLAUDE_MARKETPLACE.relative_to(ROOT)}: marketplace name must match "
+            f"plugin manifest name {manifest_name!r}"
+        )
+
+    if not isinstance(plugins, list) or not plugins:
+        errors.append(f"{CLAUDE_MARKETPLACE.relative_to(ROOT)}: plugins must be a non-empty array")
+        return errors
+
+    matching_entry: dict[str, object] | None = None
+    for plugin in plugins:
+        if not isinstance(plugin, dict):
+            errors.append(f"{CLAUDE_MARKETPLACE.relative_to(ROOT)}: plugin entries must be objects")
+            continue
+        if plugin.get("name") == manifest_name:
+            matching_entry = plugin
+
+    if matching_entry is None:
+        errors.append(
+            f"{CLAUDE_MARKETPLACE.relative_to(ROOT)}: missing plugin entry named {manifest_name!r}"
+        )
+        return errors
+
+    source = matching_entry.get("source")
+    if not isinstance(source, str) or not source:
+        errors.append(
+            f"{CLAUDE_MARKETPLACE.relative_to(ROOT)}: plugin {manifest_name!r} "
+            "must have a string source"
+        )
+        return errors
+
+    source_path = (ROOT / source).resolve()
+    try:
+        source_path.relative_to(ROOT.resolve())
+    except ValueError:
+        errors.append(
+            f"{CLAUDE_MARKETPLACE.relative_to(ROOT)}: plugin source escapes repository: {source}"
+        )
+        return errors
+
+    if not source_path.is_dir():
+        errors.append(
+            f"{CLAUDE_MARKETPLACE.relative_to(ROOT)}: plugin source does not exist: {source}"
+        )
+
+    return errors
+
+
 def main() -> int:
     errors: list[str] = []
 
@@ -178,6 +267,7 @@ def main() -> int:
         errors.extend(validate_skill(skill_dir))
 
     errors.extend(validate_workflow_yaml())
+    errors.extend(validate_claude_plugin())
 
     for error in errors:
         fail(error)
