@@ -26,16 +26,13 @@ Take a PR from "open" to "merged + Jira done + wiki updated" without human inter
 
 1. Check out the PR head: `gh pr checkout "$PR_NUMBER"`.
 2. Loop until terminal:
-   1. Fetch PR status:
-      ```bash
-      gh pr view "$PR_NUMBER" --json state,mergeable,reviews,statusCheckRollup,labels,comments,reviewDecision
-      ```
+   1. Fetch PR status with `df pr poll "$PR_NUMBER"`.
    2. If `state == "MERGED"`: break to step 3 (post-merge).
    3. If `state == "CLOSED"`: stop, set `status: blocked` with reason "PR closed without merge".
-   4. If any required check failed: read failing job logs via `gh run view --log-failed`, apply a scoped fix per the matrix in [REFERENCE.md](REFERENCE.md), `git push`, then loop.
+   4. If any required check failed: run `df pr fix-checks "$PR_NUMBER"` to fetch failing logs, apply a scoped fix per the matrix in [REFERENCE.md](REFERENCE.md), `git push`, then loop.
    5. If Copilot (or another reviewer) submitted `changes_requested`:
       - For each unresolved review comment, classify using the matrix in [REFERENCE.md](REFERENCE.md).
-      - For auto-fix-eligible comments: apply the fix, push, then resolve the thread via the GraphQL call in [REFERENCE.md](REFERENCE.md). Reply to the thread with one line summarizing what was changed.
+      - For auto-fix-eligible comments: apply the fix, push, reply with `df pr reply-thread`, then resolve with `df pr resolve-thread`.
       - For escalate comments: post a reply explaining the escalation, set `status: blocked` in `state.md` with the comment ID, and exit.
    6. If checks are green and review is approved and no auto-merge is set, run `gh pr merge "$PR_NUMBER" --squash` only when `risk: low` and `auto_merge_eligible: true`; otherwise leave the merge button for a human.
    7. If nothing changed since the last poll, sleep with backoff (30s, 60s, 120s, capped at 300s).

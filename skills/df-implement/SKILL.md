@@ -26,14 +26,14 @@ Complete the story with minimal, human-readable changes that satisfy the accepta
 
 ## Workflow
 
-1. Read `spec.md`, `plan.md`, `state.md`, `wiki/project-profile.md`, and nearby tests.
+1. Read `spec.md`, `plan.md`, `wiki/project-profile.md`, and deterministic state fields with `df state get`.
 2. Pick the next unchecked task from `plan.md`.
 3. Write one failing test for one external behavior (Red).
 4. Verify the test fails for the expected reason.
 5. Make the minimum code change to pass it (Green).
 6. Re-run the test and scoped checks from `validation_commands`.
 7. Refactor only while green.
-8. Check off the completed plan step, record progress in `state.md`, and commit in a small, related chunk.
+8. Check off the completed plan step, record progress with `df state set <TICKET-ID> phase_detail "<checkpoint>"`, and commit in a small, related chunk.
 9. Move to the next task.
 
 ## Delegation Model

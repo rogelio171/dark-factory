@@ -26,15 +26,11 @@ Write `docs/specs/<ticket-slug>/spec.md` and `docs/specs/<ticket-slug>/state.md`
 1. Read the Jira story, clarification notes, and relevant wiki pages.
 2. Read `wiki/project-profile.md` and copy the selected module scope into `state.md`.
 3. Sketch the planned diff at the path level (which directories and files will change).
-4. Compute the risk level using the rules in "Risk Classification" below.
+4. Run `df classify-risk --diff-base origin/<default-branch>` when a branch diff exists; otherwise apply the same risk matrix below to the planned path sketch.
 5. Create or update `spec.md` from `templates/spec-template.md`, filling the `Module Scope`, `Risk Assessment`, and `Evidence Plan` sections.
 6. Keep the original acceptance criteria visible and traceable.
 7. Break the work into thin vertical slices with checkboxes.
-8. Update `state.md` with the new fields:
-   - `risk: low | medium | high`
-   - `auto_merge_eligible: true | false`
-   - `target_modules` and `validation_commands`
-   - reviewer requirements beyond Copilot
+8. Update `state.md` using `df state set` for the new fields: `risk`, `auto_merge_eligible`, `target_modules`, `validation_commands`, and reviewer requirements beyond Copilot.
 9. Record current progress and the next safe step.
 
 ## Risk Classification

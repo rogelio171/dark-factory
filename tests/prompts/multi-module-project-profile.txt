@@ -1,1 +1,0 @@
-Use Dark Factory in this repository. It has packages/web and services/api. Before starting OFRS2-12345, determine which module the story should target and record validation commands without running whole-repo checks.

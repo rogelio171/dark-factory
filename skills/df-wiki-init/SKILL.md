@@ -30,15 +30,16 @@ Create `wiki/` as the durable project knowledge layer, or refresh it after meani
 ### Existing project mode
 
 1. Read the codebase in broad strokes, using subagents or agent teams by default for non-trivial repositories.
-2. Identify:
+2. Run `df detect-tooling --json --no-write` to get deterministic stack, module, and validation-command candidates.
+3. Identify:
    - stack and tooling
    - architecture boundaries
    - testing approach
    - naming and file conventions
    - domain entities and workflows
-3. Create or update wiki pages in the correct directories.
-4. Invoke `df-project-profile` if `wiki/project-profile.md` is missing or the repo layout changed.
-5. Update `wiki/index.md` and append `wiki/log.md`.
+4. Create or update wiki pages in the correct directories.
+5. Invoke `df-project-profile` if `wiki/project-profile.md` is missing or the repo layout changed.
+6. Update `wiki/index.md` and append `wiki/log.md`.
 
 ## Delegation Model
 

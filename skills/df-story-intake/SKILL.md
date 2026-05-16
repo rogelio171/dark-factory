@@ -25,14 +25,10 @@ Turn a Jira ticket into a local work item with a branch and durable state.
 
 1. Retrieve the ticket from Atlassian Rovo MCP.
 2. Extract title, description, acceptance criteria, labels, and linked context.
-3. Read `wiki/project-profile.md` and identify the likely target module scope.
-4. Create the branch as `<TICKET-ID>-<kebab-case-title>` from the default branch.
-5. Create `docs/specs/<ticket-slug>/`.
-6. Initialize:
-   - `state.md` from `df-spec/templates/state-template.md` with the ticket fields filled.
-   - empty `reviews/`
-   - empty `evidence/` with subdirectories `ui/`, `api/`, `cli/`, `unit/`, `migration/`.
-7. Record `status: intake`, the branch name, the `started` date, target modules, and validation commands in `state.md`.
+3. Run `df detect-tooling --json --no-write` if module scope is not already clear from `wiki/project-profile.md`.
+4. If the repo is multi-module and the ticket does not identify the target module, ask the user before continuing.
+5. Run `df story init <TICKET-ID> --title "<ticket title>" --module <module-path>` to create the branch, story directory, `state.md`, `reviews/`, and evidence folders.
+6. Preserve the raw ticket text and acceptance criteria for `df-spec`; do not summarize away important wording.
 
 ## Outputs
 

@@ -25,7 +25,7 @@ Drive ambiguous work toward shared understanding before implementation starts, w
 2. Identify the next most important unresolved question.
 3. Ask exactly that one question, including a recommended answer with brief reasoning.
 4. Wait for the user's answer.
-5. Record the resolved decision where the calling skill expects it (typically `state.md` "Decisions" or the design doc).
+5. Record the resolved decision where the calling skill expects it (typically `state.md` "Decisions" or the design doc); when a story is active, also update the short resume summary with `df state set <TICKET-ID> phase_detail "<decision summary>"`.
 6. Loop until the remaining uncertainty is small enough for the caller to act safely.
 
 ## Outputs

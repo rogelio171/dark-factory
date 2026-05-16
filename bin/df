@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ -d "$SCRIPT_DIR/../tools" ]]; then
+  export PYTHONPATH="$SCRIPT_DIR/../tools${PYTHONPATH:+:$PYTHONPATH}"
+elif [[ -d "$SCRIPT_DIR/../lib" ]]; then
+  export PYTHONPATH="$SCRIPT_DIR/../lib${PYTHONPATH:+:$PYTHONPATH}"
+fi
+
+exec python3 -m dark_factory "$@"

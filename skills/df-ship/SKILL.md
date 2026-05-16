@@ -29,43 +29,15 @@ Open the PR with everything Copilot review and `df-merge` need to drive it to me
 ## Workflow
 
 1. Read `spec.md`, `plan.md`, `state.md`, `preflight.json`, and `evidence/INDEX.md`.
-2. Push the current branch if it is ahead of origin: `git push -u origin HEAD`.
-3. Build the PR body from `.github/pull_request_template.md`, filling:
-   - `## Summary` from the spec's Problem Statement and Implementation Approach.
-   - `## Test plan` from the spec's Testing Strategy and `preflight.json` results.
-   - `## Evidence` with links to each file in `evidence/INDEX.md`.
-   - `## Risk` with the `risk` and `auto_merge_eligible` values from `state.md`.
-   - `## Module Scope` with `target_modules` and command roots from `state.md`.
-   - `## Related` with the Jira URL and spec/state paths.
-4. Open the PR:
-   ```bash
-   gh pr create --title "<TICKET-ID>: <title>" --body-file <(printf '%s\n' "$body")
-   ```
-5. Capture the PR URL and number from the command output.
-6. Apply labels:
-   ```bash
-   gh pr edit "$PR_NUMBER" --add-label "risk:$risk"
-   if [ "$auto_merge_eligible" = "true" ]; then
-     gh pr edit "$PR_NUMBER" --add-label "auto_merge_eligible"
-   fi
-   ```
-7. Request Copilot review (defensive; the `pr-open` workflow does this too). If the request fails because Copilot review is not enabled, warn clearly; do not hide the warning in logs:
+2. Preview the deterministic PR body with `df render-pr-body <TICKET-ID>` if the user asks to review it.
+3. Run `df ship <TICKET-ID>` to push the branch, create or update the PR, apply risk labels, arm auto-merge when eligible, and write `pr_url`, `pr_number`, and `status: merging` back to `state.md`.
+4. Request Copilot review (defensive; the `pr-open` workflow does this too). If the request fails because Copilot review is not enabled, warn clearly; do not hide the warning in logs:
    ```bash
    gh api -X POST "repos/${REPO}/pulls/${PR_NUMBER}/requested_reviewers" \
      -f reviewers='["copilot-pull-request-reviewer"]' || \
      echo "Copilot reviewer request failed; verify repo Settings -> Code review."
    ```
-8. Arm auto-merge only when `risk: low` AND `auto_merge_eligible: true`:
-   ```bash
-   if [ "$risk" = "low" ] && [ "$auto_merge_eligible" = "true" ]; then
-     gh pr merge "$PR_NUMBER" --auto --squash
-   fi
-   ```
-9. Post the initial Jira summary via Atlassian Rovo MCP, including the PR URL and a one-line evidence summary.
-10. Update `state.md`:
-    - `status: merging`
-    - `pr_url`, `pr_number`
-    - `phase_detail: "PR open, awaiting Copilot review and CI"`
+5. Post the initial Jira summary via Atlassian Rovo MCP, including the PR URL and a one-line evidence summary.
 
 ## Outputs
 

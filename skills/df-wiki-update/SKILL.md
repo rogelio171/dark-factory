@@ -23,22 +23,23 @@ Make sure the wiki accumulates project knowledge after every merge, so the next 
 
 ## Workflow
 
-1. Read `spec.md` and the merged diff summary.
-2. Decide what is genuinely new knowledge:
+1. Read `spec.md`, `state.md`, and the merged diff summary.
+2. Confirm the merge SHA with `df state get <TICKET-ID> merge_sha`; do not continue if it is empty.
+3. Decide what is genuinely new knowledge:
    - A reusable pattern (caching strategy, error-handling shape, validation approach) -> `wiki/patterns/<name>.md`.
    - A new domain entity or a meaningful change to an existing one -> `wiki/entities/<name>.md`.
    - An architecture boundary or integration that was not documented -> `wiki/architecture/<name>.md`.
    - A new tool, library, or framework added to the stack -> `wiki/stack/<name>.md`.
-3. Create or update those pages. Keep entries small, durable, and linkable.
-4. Append a dated entry to `wiki/log.md`:
+4. Create or update those pages. Keep entries small, durable, and linkable.
+5. Append a dated entry to `wiki/log.md`:
    ```markdown
    ## 2026-04-19 - OFRS2-12345 - add dark mode toggle (merged abc1234)
    - New pattern: theme-context (`wiki/patterns/theme-context.md`)
    - Updated entity: user-preferences (`wiki/entities/user-preferences.md`)
    - PR: <pr_url>
    ```
-5. Update `wiki/index.md` if any new pages were added.
-6. Update `state.md`: set `status: complete` and append a "wiki updates" line under "Resume Notes".
+6. Update `wiki/index.md` if any new pages were added.
+7. Update `state.md` with `df state set <TICKET-ID> status complete` and append a "wiki updates" line under "Resume Notes".
 
 ## Outputs
 

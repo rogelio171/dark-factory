@@ -23,19 +23,10 @@ Create or refresh `wiki/project-profile.md` so every later phase knows the inten
 ## Workflow
 
 1. Confirm the agent is at the target repository root with `git rev-parse --show-toplevel`.
-2. Detect project layout:
-   - root manifests: `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`
-   - workspace manifests: `pnpm-workspace.yaml`, `turbo.json`, `nx.json`, `lerna.json`
-   - nested module manifests under common roots such as `apps/`, `packages/`, `services/`, and `libs/`
-3. For each module, record:
-   - path relative to repo root
-   - language/tooling
-   - likely install, lint, typecheck, test, and build commands
-   - whether commands should run from repo root or module root
-4. Identify the default story scope:
-   - single-module repo: that module
-   - monorepo: ask the user which module(s) Dark Factory should target by default
-5. Write `wiki/project-profile.md`.
+2. Run `df detect-tooling --json --no-write` to get the deterministic module and command inventory.
+3. For a single-module repo, run `df detect-tooling` to write `wiki/project-profile.md`.
+4. For a monorepo, ask the user which module(s) Dark Factory should target by default, then run `df detect-tooling --module <module-path>`.
+5. Review the generated `wiki/project-profile.md` for scope accuracy; edit only decisions that require human context.
 6. Append `wiki/log.md` with the profile date and notable scope decisions.
 
 ## Outputs

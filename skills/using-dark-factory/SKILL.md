@@ -23,9 +23,10 @@ Help the agent decide whether Dark Factory is the right workflow and start it sa
 
 1. Decide whether the request is a Dark Factory workflow.
 2. If yes, confirm the agent is in the intended target repository.
-3. Invoke `dark-factory`.
-4. Let the orchestrator check `wiki/`, `wiki/project-profile.md`, and `docs/specs/*/state.md`.
-5. If the repo has multiple modules, do not proceed until `df-project-profile` records the target module scope.
+3. Run `df doctor --runtime generic` when the CLI is installed; otherwise install the skill pack first.
+4. Invoke `dark-factory`.
+5. Let the orchestrator check `wiki/`, `wiki/project-profile.md`, and `docs/specs/*/state.md`.
+6. If the repo has multiple modules, do not proceed until `df-project-profile` records the target module scope.
 
 ## Outputs
 

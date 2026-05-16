@@ -1,1 +1,0 @@
-Implement the next Dark Factory plan task. Write the failing test first, verify the expected failure, then make the minimum code change and run the scoped validation command.

@@ -24,7 +24,7 @@ Find and fix issues before evidence collection and PR creation.
 
 ## Workflow
 
-1. Read `spec.md`, `plan.md`, `state.md`, `wiki/project-profile.md`, and the current diff.
+1. Read `spec.md`, `plan.md`, `wiki/project-profile.md`, deterministic state fields via `df state get`, and the current diff.
 2. Launch a spec compliance reviewer with the spec, plan, module scope, diff, and acceptance criteria.
 3. Launch a code quality reviewer only after spec compliance is clean.
 4. Categorize findings:
@@ -36,6 +36,7 @@ Find and fix issues before evidence collection and PR creation.
 7. Re-run scoped tests and relevant checks.
 8. Launch fresh review subagents.
 9. Repeat until no critical findings remain.
+10. Record the clean pass with `df state set <TICKET-ID> phase_detail "review clean"` before advancing.
 
 ## Delegation Model
 

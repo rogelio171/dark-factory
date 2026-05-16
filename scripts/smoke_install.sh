@@ -9,7 +9,7 @@ SOURCE="$TMP_DIR/source"
 TARGET="$TMP_DIR/target"
 
 mkdir -p "$SOURCE" "$TARGET"
-cp -R "$ROOT/install.sh" "$ROOT/skills" "$ROOT/docs" "$ROOT/README.md" "$SOURCE/"
+cp -R "$ROOT/install.sh" "$ROOT/skills" "$ROOT/docs" "$ROOT/README.md" "$ROOT/bin" "$ROOT/tools" "$SOURCE/"
 git -C "$TARGET" init -q
 
 skill_count="$(find "$SOURCE/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d '[:space:]')"
@@ -51,6 +51,9 @@ if ! grep -q "$marker" "$TARGET/.agents/skills/df-clarify/SKILL.md"; then
 fi
 
 test -f "$TARGET/.agents/skills/.dark-factory-version"
+test -x "$TARGET/.agents/bin/df"
+test -d "$TARGET/.agents/lib/dark_factory"
+"$TARGET/.agents/bin/df" --help >/tmp/dark-factory-df-help.log
 
 plain="$TMP_DIR/plain"
 mkdir -p "$plain"
@@ -62,5 +65,6 @@ fi
 force_output="$(bash "$SOURCE/install.sh" --target "$plain" --force)"
 printf '%s\n' "$force_output"
 test -d "$plain/.agents/skills/dark-factory"
+test -x "$plain/.agents/bin/df"
 
 echo "Dark Factory installer smoke test passed."

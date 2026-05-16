@@ -22,19 +22,15 @@ Recover the current story state from disk (and from GitHub when a PR is already 
 
 ## Workflow
 
-1. Find active stories under `docs/specs/`.
-2. Read each `state.md`.
-3. Identify the most recent in-progress story or ask the user which one to resume.
-4. Read the supporting artifacts for that story:
+1. Run `df resume [--ticket <TICKET-ID>]` to identify the active story, reconcile `state.md` with any open PR, update `last_updated`, and print the next skill.
+2. Read the supporting artifacts for that story before dispatching:
    - `spec.md`
    - `plan.md`
    - `reviews/`
    - `evidence/INDEX.md`
    - `preflight.json`
-5. If `state.md` records a `pr_url`, fetch `gh pr view <pr_number> --json state,mergeable,reviews,statusCheckRollup` and reconcile with the file's recorded status.
-6. Confirm the repository state matches the recorded phase (current branch, checked-in files).
-7. Update `last_updated` in `state.md` to the current timestamp.
-8. Dispatch to the correct next skill based on `status`.
+3. Confirm the repository state matches the recorded phase (current branch, checked-in files).
+4. Dispatch to the skill reported by `df resume`.
 
 ## Outputs
 

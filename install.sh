@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: install.sh [--with-github] [--target PATH] [--dry-run] [--force] [PATH]
+Usage: install.sh [--with-github] [--runtime cursor|claude|generic] [--target PATH] [--dry-run] [--force] [PATH]
 
 Installs Dark Factory skills into PATH/.agents/skills/.
 
@@ -11,6 +11,8 @@ Options:
   --target PATH   Target project directory.
   --dry-run       Show what would change without writing files.
   --force         Allow suspicious targets without project markers.
+  --runtime NAME  Runtime surface to validate in df doctor. One of:
+                  cursor, claude, generic. Defaults to generic.
   --with-github   After install, print the follow-up command to scaffold the
                   GitHub-side automation via the df-github-init skill.
   -h, --help      Show this help.
@@ -31,6 +33,7 @@ EOF
 WITH_GITHUB=0
 DRY_RUN=0
 FORCE=0
+RUNTIME="generic"
 TARGET=""
 
 while (($#)); do
@@ -51,6 +54,20 @@ while (($#)); do
     --force)
       FORCE=1
       shift
+      ;;
+    --runtime)
+      [[ $# -ge 2 ]] || { echo "--runtime requires cursor, claude, or generic" >&2; exit 2; }
+      case "$2" in
+        cursor|claude|generic)
+          RUNTIME="$2"
+          ;;
+        *)
+          echo "Invalid runtime: $2" >&2
+          usage >&2
+          exit 2
+          ;;
+      esac
+      shift 2
       ;;
     -h|--help)
       usage
@@ -92,6 +109,8 @@ fi
 
 TARGET="$(cd "$TARGET" && pwd -P)"
 DEST="$TARGET/.agents/skills"
+DEST_BIN="$TARGET/.agents/bin"
+DEST_LIB="$TARGET/.agents/lib"
 
 has_project_marker() {
   [[ -d "$TARGET/.git" ]] ||
@@ -136,10 +155,12 @@ skill_hash() {
 
 echo "Dark Factory install target: $TARGET"
 echo "Skills destination: $DEST"
+echo "Runtime: $RUNTIME"
 if [[ "$DRY_RUN" -eq 1 ]]; then
   echo "Dry run: no files will be changed."
 else
   mkdir -p "$DEST"
+  mkdir -p "$DEST_BIN" "$DEST_LIB"
 fi
 
 INSTALLED=0
@@ -180,6 +201,28 @@ for skill_dir in "$SCRIPT_DIR"/skills/*; do
   INSTALLED=$((INSTALLED + 1))
 done
 
+if [[ "$DRY_RUN" -eq 1 ]]; then
+  echo "Would install df CLI: $DEST_BIN/df"
+  echo "Would install Python package: $DEST_LIB/dark_factory"
+else
+  if [[ ! -f "$SCRIPT_DIR/bin/df" || ! -d "$SCRIPT_DIR/tools/dark_factory" ]]; then
+    echo "Missing Dark Factory CLI source (bin/df or tools/dark_factory)" >&2
+    exit 1
+  fi
+  cp "$SCRIPT_DIR/bin/df" "$DEST_BIN/df"
+  chmod +x "$DEST_BIN/df"
+  tmp_lib="$DEST_LIB/.dark_factory.tmp.$$"
+  old_lib="$DEST_LIB/.dark_factory.old.$$"
+  rm -rf "$tmp_lib" "$old_lib"
+  cp -R "$SCRIPT_DIR/tools/dark_factory" "$tmp_lib"
+  if [[ -d "$DEST_LIB/dark_factory" ]]; then
+    mv "$DEST_LIB/dark_factory" "$old_lib"
+  fi
+  mv "$tmp_lib" "$DEST_LIB/dark_factory"
+  rm -rf "$old_lib"
+  echo "Installed df CLI: $DEST_BIN/df"
+fi
+
 if git -C "$SCRIPT_DIR" rev-parse HEAD >/dev/null 2>&1; then
   SOURCE_SHA="$(git -C "$SCRIPT_DIR" rev-parse HEAD)"
 else
@@ -192,10 +235,12 @@ source_repo: $SCRIPT_DIR
 source_sha: $SOURCE_SHA
 installed_at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
 target: $TARGET
+runtime: $RUNTIME
 EOF
 fi
 
 echo "Dark Factory: installed $INSTALLED skill(s), skipped $SKIPPED unchanged skill(s) at $DEST"
+echo "Dark Factory CLI: $DEST_BIN/df"
 
 if (( WITH_GITHUB == 1 )); then
   cat <<EOF

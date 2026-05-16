@@ -23,22 +23,23 @@ Stand up the GitHub-side automation that lets `df-ship` arm auto-merge and `df-m
 
 ## Workflow
 
-1. Detect the default branch and the repository slug.
-2. Copy template files from `templates/` into the target repo, preserving paths:
+1. Run `df doctor --runtime generic` (or the chosen runtime) and resolve missing prerequisites before writing GitHub automation.
+2. Detect the default branch and the repository slug.
+3. Copy template files from `templates/` into the target repo, preserving paths:
    - `.github/workflows/pr-checks.yml`
    - `.github/workflows/pr-open.yml`
    - `.github/workflows/pr-fix-loop.yml`
    - `.github/CODEOWNERS`
    - `.github/pull_request_template.md`
-3. Review `wiki/project-profile.md` and replace the placeholder module matrix in `pr-checks.yml` with explicit module commands before enabling branch protection.
-4. Generate `.github/copilot-instructions.md` from the wiki:
+4. Review `wiki/project-profile.md` and replace the placeholder module matrix in `pr-checks.yml` with explicit module commands before enabling branch protection.
+5. Generate `.github/copilot-instructions.md` from the wiki:
    - Pull conventions from `wiki/patterns/`, stack notes from `wiki/stack/`, and architecture summaries from `wiki/architecture/`.
    - Use `templates/copilot-instructions.md` as the skeleton and fill the project-specific sections.
-5. If the repo does not already have the labels `risk:low`, `risk:medium`, `risk:high`, `auto_merge_eligible`, create them with `gh label create`.
-6. Print (do not silently run) the branch-protection command from "Branch protection" below and ask the user to confirm.
-7. After the user confirms, run the command and report the result.
-8. Open `.github/workflows/pr-fix-loop.yml` and instruct the user to fill the `AGENT RUNTIME PLACEHOLDER` step with their chosen runtime (Cursor CLI, Cursor Cloud, Claude Code Action, etc. - examples are commented in the file), then set `DF_MERGE_RUNTIME_CONFIGURED: "true"`. Until then, the workflow exits successfully without running fixes.
-9. Commit the changes on a branch named `chore/df-github-init` and open a PR titled "chore: scaffold Dark Factory GitHub automation".
+6. If the repo does not already have the labels `risk:low`, `risk:medium`, `risk:high`, `auto_merge_eligible`, create them with `gh label create`.
+7. Print (do not silently run) the branch-protection command from "Branch protection" below and ask the user to confirm.
+8. After the user confirms, run the command and report the result.
+9. Open `.github/workflows/pr-fix-loop.yml` and instruct the user to fill the `AGENT RUNTIME PLACEHOLDER` step with their chosen runtime (Cursor CLI, Cursor Cloud, Claude Code Action, etc. - examples are commented in the file), then set `DF_MERGE_RUNTIME_CONFIGURED: "true"`. Until then, the workflow exits successfully without running fixes.
+10. Commit the changes on a branch named `chore/df-github-init` and open a PR titled "chore: scaffold Dark Factory GitHub automation".
 
 ## Branch protection
 
