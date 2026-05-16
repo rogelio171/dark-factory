@@ -6,19 +6,36 @@ Dark Factory is a repeatable agent workflow for taking a Jira story from intake 
 
 ## Setup
 
-1. If you are on Claude Code, install via `/plugin marketplace add rogelioorona/dark-factory` and `/plugin install dark-factory@dark-factory`; otherwise install the skill pack into a target project with `./install.sh --target /path/to/project`.
+1. If you are on Claude Code, install via `/plugin marketplace add rogelioorona/dark-factory` and `/plugin install dark-factory@dark-factory`; otherwise install the skill pack and deterministic harness into a target project with `./install.sh --runtime cursor|claude|generic --target /path/to/project`.
 2. Make sure the target project has:
    - GitHub CLI authenticated
    - Atlassian Rovo MCP configured
    - Playwright MCP configured (if any acceptance criteria use UI evidence)
-3. Run `df-github-init` once per target repository to scaffold the GitHub-side automation (Actions, CODEOWNERS, Copilot instructions, branch protection).
+3. Run `df doctor --runtime <runtime>` in the target project and resolve missing prerequisites.
+4. Run `df-github-init` once per target repository to scaffold the GitHub-side automation (Actions, CODEOWNERS, Copilot instructions, branch protection).
    - `pr-checks.yml` runs for pull requests without assuming `main` or `master`.
    - `pr-fix-loop.yml` is disabled until its agent runtime placeholder is replaced and `DF_MERGE_RUNTIME_CONFIGURED` is set to `true`.
-4. Ask the agent to use `dark-factory`.
+5. Ask the agent to use `dark-factory`.
 
 ## Operating Model
 
-The main agent is a coordinator. It routes phases, keeps `state.md` current, asks for user decisions, and synthesizes results into durable files. It should prefer subagents or agent teams for broad exploration, implementation research, review, evidence capture, preflight diagnosis, and PR babysitting so the main context stays small.
+The main agent is a coordinator. It routes phases, asks for user decisions, and synthesizes results into durable files. Deterministic work is delegated to the `df` CLI: state mutation, tooling detection, risk classification, preflight, evidence indexing, PR body rendering, PR plumbing, and resume dispatch. The agent should prefer subagents or agent teams for broad exploration, implementation research, review, evidence capture, preflight diagnosis, and PR babysitting so the main context stays small.
+
+## Deterministic Harness
+
+The installed CLI lives at `.agents/bin/df` and imports its package from `.agents/lib/dark_factory`. In this source repository, `python -m dark_factory` and `bin/df` expose the same commands.
+
+Common commands:
+
+- `df doctor --runtime cursor|claude|generic`: verify git, `gh`, skills, wiki, and runtime surface.
+- `df state init|get|set|list`: create and safely mutate story state.
+- `df detect-tooling`: detect modules and validation commands, then write `wiki/project-profile.md`.
+- `df classify-risk`: apply the path-based risk matrix.
+- `df preflight`: run local CI mirror and write `preflight.json`.
+- `df evidence index`: render `evidence/INDEX.md`.
+- `df render-pr-body` and `df ship`: create/update PRs and auto-merge low-risk eligible changes.
+- `df pr ...`: poll PR status, reply to and resolve review threads, and retrieve failed-check logs.
+- `df resume`: reconcile disk state with GitHub and print the next skill.
 
 ## Phase Flow
 
@@ -31,12 +48,12 @@ The main agent is a coordinator. It routes phases, keeps `state.md` current, ask
 ### 2. Story intake
 
 - `df-story-intake` fetches the Jira story.
-- It creates the branch and the `docs/specs/<ticket>/` working area.
-- It records target modules and validation commands from `wiki/project-profile.md`.
+- It uses `df story init` to create the branch and the `docs/specs/<ticket>/` working area.
+- It records target modules and validation commands from `wiki/project-profile.md` or `df detect-tooling`.
 
 ### 3. Workspace
 
-- `df-workspace` records the current checkout or creates an isolated worktree when approved.
+- `df-workspace` records the current checkout with `df workspace detect` or creates an isolated worktree with `df workspace create` when approved.
 - It stores `workspace_path`, `working_root`, and validation commands in `state.md`.
 
 ### 4. Clarification
@@ -76,14 +93,14 @@ The main agent is a coordinator. It routes phases, keeps `state.md` current, ask
 
 ### 10. Preflight
 
-- `df-preflight` mirrors CI locally before the PR is opened, using module-scoped commands from `state.md`.
+- `df-preflight` mirrors CI locally before the PR is opened by running `df preflight <ticket>`, using module-scoped commands from `state.md`.
 - It runs lint, typecheck, test, build, secret scan, dependency audit, and commit-message lint.
 - Output is written to `docs/specs/<ticket>/preflight.json` and consumed by `df-ship`.
 - Diagnostics for failed stages should be delegated when they require broad log or codebase analysis.
 
 ### 11. Ship
 
-- `df-ship` opens the PR with the structured PR template body and inline evidence links.
+- `df-ship` opens the PR with the structured PR template body generated by `df render-pr-body` and inline evidence links.
 - Applies `risk:<level>` label and, when eligible, `auto_merge_eligible` label.
 - Requests a Copilot code review.
 - When `risk: low` and `auto_merge_eligible: true`, runs `gh pr merge --auto --squash`.
@@ -93,7 +110,7 @@ The main agent is a coordinator. It routes phases, keeps `state.md` current, ask
 
 ### 12. Merge
 
-- `df-merge` watches required checks and the Copilot review.
+- `df-merge` watches required checks and the Copilot review using `df pr poll` and the PR helper commands.
 - Auto-fixes eligible Copilot comments (lint, types, naming, missing tests, docstrings, dead code, suggested refactors with concrete code blocks).
 - Escalates to a human when comments hit a CODEOWNERS path, are tagged security, conflict with `spec.md`, or expand scope.
 - The coordinator may delegate thread classification and CI diagnostics, but it owns pushes, thread-resolution decisions, and escalation.

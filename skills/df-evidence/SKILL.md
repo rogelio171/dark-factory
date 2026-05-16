@@ -40,8 +40,9 @@ Produce reusable, kind-appropriate proof that the story satisfies every acceptan
    - `cli`: run the command and save the transcript.
    - `unit`: run the targeted test set and save the report path and the relevant excerpt.
    - `migration`: dump the schema before and after and save the upgrade output.
-4. Write `docs/specs/<ticket>/evidence/INDEX.md` mapping each criterion to the file(s) that prove it.
-5. Update `state.md` with `status: evidencing` -> ready to call `df-preflight`, and the count of criteria still missing evidence.
+4. For each captured file, add a small `<file>.yaml` sidecar when the criterion name is not obvious from the file name.
+5. Run `df evidence index <TICKET-ID>` to write `docs/specs/<ticket>/evidence/INDEX.md` deterministically.
+6. Update unresolved evidence gaps with `df state set <TICKET-ID> phase_detail "<missing evidence summary>"`.
 
 ## Delegation Model
 

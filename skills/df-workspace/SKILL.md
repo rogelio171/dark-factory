@@ -23,19 +23,12 @@ Protect the user's current checkout and make story work resumable by recording t
 ## Workflow
 
 1. Read `state.md` and `wiki/project-profile.md`.
-2. Detect repository state:
-   - `git rev-parse --show-toplevel`
-   - `git rev-parse --git-dir`
-   - `git rev-parse --git-common-dir`
-   - `git rev-parse --show-superproject-working-tree`
-3. If already in a linked worktree and not a submodule, record it and continue.
+2. Run `df workspace detect` and use its JSON output as the source of truth for `workspace_path`, `working_root`, and `workspace_isolated`.
+3. If already in a linked worktree and not a submodule, record it with `df state set` and continue.
 4. If in a normal checkout, ask whether to create an isolated worktree unless the user already gave a preference.
-5. If creating a project-local worktree:
-   - prefer existing `.worktrees/`, then `worktrees/`
-   - otherwise use `.worktrees/`
-   - verify the chosen directory is ignored before creating it
+5. If the user approves an isolated workspace, run `df workspace create --ticket <TICKET-ID> --worktree`.
 6. Run baseline setup and validation commands from `wiki/project-profile.md` when available.
-7. Update `state.md` with `workspace_path`, `workspace_isolated`, `working_root`, and `validation_commands`.
+7. Record any baseline failure in `state.md` with `df state set <TICKET-ID> phase_detail "<failure summary>"` and ask before continuing.
 
 ## Outputs
 

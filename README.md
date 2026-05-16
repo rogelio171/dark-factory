@@ -160,7 +160,15 @@ The installer copies each skill directory into:
 .agents/skills/
 ```
 
-inside the target project, writes a `.dark-factory-version` stamp from the source repo's `git rev-parse HEAD`, and skips any skill whose source content is unchanged since the last install.
+inside the target project, installs the deterministic `df` CLI into `.agents/bin/df`, installs the Python harness package under `.agents/lib/dark_factory`, writes a `.dark-factory-version` stamp from the source repo's `git rev-parse HEAD`, and skips any skill whose source content is unchanged since the last install.
+
+Use `--runtime cursor|claude|generic` to record the intended runtime surface:
+
+```bash
+./install.sh --runtime cursor --target /path/to/target-project
+```
+
+`generic` keeps the portable `.agents/skills/` layout. `cursor` and `claude` are checked by `df doctor --runtime <name>` so setup problems are surfaced before story work starts.
 
 ### Example
 
@@ -176,7 +184,30 @@ This will create:
 ~/dev/my-app/.agents/skills/df-wiki-init
 ~/dev/my-app/.agents/skills/df-story-intake
 ...
+~/dev/my-app/.agents/bin/df
+~/dev/my-app/.agents/lib/dark_factory
 ```
+
+## Deterministic Harness CLI
+
+Dark Factory now ships a thin Python CLI named `df`. Skills still describe the workflow and judgment rules, but deterministic mechanics are executed by commands so any agent runtime can behave the same way.
+
+Core commands:
+
+```bash
+df doctor --runtime generic
+df state init|get|set|list
+df detect-tooling
+df classify-risk --diff-base origin/main
+df preflight <ticket>
+df evidence index <ticket>
+df render-pr-body <ticket>
+df ship <ticket>
+df pr poll|resolve-thread|reply-thread|fix-checks
+df resume [--ticket <ticket>]
+```
+
+The agent remains responsible for judgment-heavy work: clarification, implementation, review, evidence capture, failure diagnosis, and Copilot comment classification. The CLI owns state mutation, risk path matching, command detection, preflight schema generation, evidence index rendering, PR body rendering, PR plumbing, and resume dispatch.
 
 ## What Gets Created in the Target Project
 
@@ -420,14 +451,17 @@ This repository validates itself with `.github/workflows/validate.yml`. The vali
 - `SKILL.md` frontmatter and required section order
 - referenced sibling files in skill docs
 - required coordinator/subagent delegation guidance for heavy-work skills
+- valid `df <command>` references in skill docs
+- state-template schema drift
+- fail-by-default placeholders in generated workflow templates
 - generated GitHub workflow YAML syntax
 - `install.sh` smoke behavior: first install, idempotent reinstall, and selective reinstall after a changed skill
-- `tests/fixtures/` and `tests/prompts/` hold lightweight multi-module and behavior-eval fixtures for future adversarial checks
+- pytest coverage under `tools/dark_factory/tests/` exercises CLI primitives against temporary repositories
 
 Run the same checks locally with:
 
 ```bash
-python -m pip install pyyaml  # needed for workflow YAML parse checks
+python -m pip install pyyaml pytest  # needed for workflow YAML and CLI tests
 bash scripts/run-tests.sh
 ```
 

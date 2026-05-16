@@ -25,28 +25,11 @@ Catch every failure that CI would catch, before the PR exists, and write a machi
 
 ## Workflow
 
-1. Read `state.md`, `plan.md`, and `wiki/project-profile.md` to determine `working_root`, `target_modules`, and `validation_commands`.
-2. Build the command list from recorded validation commands. If a command is missing, detect the target module's tooling by reading manifests:
-   - JS/TS: `package.json` scripts (`lint`, `typecheck`, `test`, `build`) and the package manager from `pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`, or fallback npm install.
-   - Python: `pyproject.toml`, `tox.ini`, `Makefile` targets.
-   - Go: module-root `go vet ./...`, `go test ./...`, `go build ./...`.
-   - Rust: module-root `cargo fmt --check`, `cargo clippy`, `cargo test`, `cargo build`.
-   - Fallback: `Makefile` targets named `lint`, `test`, `build`.
-3. Run the detected commands in this order, recording cwd, exit code, duration, and the last 50 lines of output for each:
-   - lint
-   - typecheck
-   - test
-   - build
-4. Run security scans when available:
-   - `gitleaks detect --source . --no-git -v` if `gitleaks` is on `PATH`.
-   - Dependency audit: `npm audit --omit=dev --json`, `pnpm audit --prod --json`, `pip-audit --format json`, `cargo audit --json`, `bundle audit check --update`. Run only when the corresponding manifest exists.
-5. Lint the branch's commit range with conventional-commits rules:
-   - Compute base with `git merge-base HEAD origin/<default-branch>`.
-   - For each commit in the range, validate `type(scope?): subject` (allowed types: `feat fix docs style refactor perf test build ci chore revert`).
-6. Write `docs/specs/<ticket>/preflight.json` (see REFERENCE.md for the schema).
-7. Update `state.md`:
-   - On all green: `status: preflight` -> ready to call `df-ship`, `phase_detail: "preflight green"`.
-   - On any failure: keep `status: preflight`, set `phase_detail: "preflight failed: <stage>"`, list the failures under "Blockers".
+1. Read `state.md`, `plan.md`, and `wiki/project-profile.md` to confirm the intended scope.
+2. Run `df preflight <TICKET-ID>`.
+3. Read `docs/specs/<ticket>/preflight.json`; the CLI records cwd, exit code, duration, output tail, skipped stages, security scans, dependency audits, and `df commit-lint` results.
+4. If the command exits non-zero, delegate failure diagnosis and route the fix back to `df-implement` or `df-review`.
+5. If the command exits zero, hand off to `df-ship`.
 
 ## Delegation Model
 

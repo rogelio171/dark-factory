@@ -25,12 +25,13 @@ Pick the right phase skill for the current state and dispatch to it, so the user
 ## Workflow
 
 1. Identify the target ticket or active story.
-2. Check whether project knowledge exists in `wiki/`.
-3. Check whether module scope exists in `wiki/project-profile.md`.
-4. Check whether GitHub automation exists in `.github/workflows/pr-checks.yml`.
-5. Check for story state in `docs/specs/<ticket-slug>/state.md`.
-6. Apply the dispatch rules below to pick the next skill.
-7. Advance one phase at a time and keep `state.md` current.
+2. Run `df doctor --runtime generic` (or the user's chosen runtime) to surface missing deterministic harness prerequisites.
+3. Check whether project knowledge exists in `wiki/`.
+4. Check whether module scope exists in `wiki/project-profile.md`.
+5. Check whether GitHub automation exists in `.github/workflows/pr-checks.yml`.
+6. If a story state exists, run `df resume [--ticket <TICKET-ID>]` and compare its reported next skill with the dispatch rules below.
+7. Apply the dispatch rules below to pick the next skill.
+8. Advance one phase at a time and keep `state.md` current with `df state set`.
 
 ## Dispatch Rules
 

@@ -31,7 +31,7 @@ End the clarification phase with a story that is safe to spec: either move direc
    - unclear validation or rollout expectations
 4. If the gaps are small and answerable from wiki + ticket, summarize them in `state.md` under "Decisions" and proceed.
 5. If the gaps are material, invoke `df-grill-me` to interview the user one question at a time.
-6. Record the resolved answers in `state.md` under "Decisions".
+6. Record the resolved answers in `state.md` under "Decisions" and use `df state set <TICKET-ID> phase_detail "<clarification summary>"` to keep the machine-readable state current.
 
 ## Outputs
 

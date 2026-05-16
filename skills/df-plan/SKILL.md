@@ -24,7 +24,7 @@ Turn `spec.md` into a concrete implementation plan that another agent can execut
 ## Workflow
 
 1. Read `state.md`, `spec.md`, and `wiki/project-profile.md`.
-2. Confirm `target_modules`, `working_root`, and `validation_commands` are populated in `state.md`.
+2. Confirm deterministic fields with `df state get <TICKET-ID> target_modules`, `df state get <TICKET-ID> working_root`, and `df state get <TICKET-ID> validation_commands`.
 3. Create or update `plan.md` from `templates/plan-template.md`.
 4. Break the work into small tasks that each include:
    - exact files to create or modify
@@ -33,8 +33,8 @@ Turn `spec.md` into a concrete implementation plan that another agent can execut
    - minimal implementation step
    - command to verify success
    - commit checkpoint
-5. Mark `state.md` as `planning` while this skill is active.
-6. When the plan is complete, set the next status to `implementing`.
+5. Mark `state.md` as `planning` while this skill is active with `df state set <TICKET-ID> status planning`.
+6. When the plan is complete, set the next status to `implementing` with `df state set <TICKET-ID> status implementing`.
 
 ## Outputs
 

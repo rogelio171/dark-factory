@@ -18,6 +18,13 @@ ROOT_WORKFLOW_DIR = ROOT / ".github" / "workflows"
 CLAUDE_PLUGIN_DIR = ROOT / ".claude-plugin"
 CLAUDE_PLUGIN_MANIFEST = CLAUDE_PLUGIN_DIR / "plugin.json"
 CLAUDE_MARKETPLACE = CLAUDE_PLUGIN_DIR / "marketplace.json"
+STATE_TEMPLATE = SKILLS_DIR / "df-spec" / "templates" / "state-template.md"
+
+sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "tools"))
+
+from dark_factory.cli import KNOWN_COMMANDS  # noqa: E402
+from dark_factory.yamlish import split_frontmatter  # noqa: E402
 
 REQUIRED_SECTIONS = [
     "# ",
@@ -38,6 +45,33 @@ DELEGATION_REQUIRED_SKILLS = {
     "df-evidence",
     "df-preflight",
     "df-merge",
+}
+
+STATE_SCHEMA_KEYS = {
+    "ticket",
+    "title",
+    "branch",
+    "status",
+    "phase_detail",
+    "risk",
+    "auto_merge_eligible",
+    "started",
+    "last_updated",
+    "repo_root",
+    "working_root",
+    "workspace_path",
+    "workspace_isolated",
+    "target_modules",
+    "validation_commands",
+    "module_scope_notes",
+    "spec_path",
+    "plan_path",
+    "review_path",
+    "evidence_path",
+    "preflight_path",
+    "pr_url",
+    "pr_number",
+    "merge_sha",
 }
 
 
@@ -129,6 +163,12 @@ def validate_skill(skill_dir: Path) -> list[str]:
     for link_error in validate_links(skill_dir, body):
         errors.append(f"{path.relative_to(ROOT)}: {link_error}")
 
+    for command in re.findall(r"`df\s+([a-z][a-z-]*)\b", body):
+        if command not in KNOWN_COMMANDS:
+            errors.append(
+                f"{path.relative_to(ROOT)}: unknown df CLI command {command!r}"
+            )
+
     if skill_dir.name in DELEGATION_REQUIRED_SKILLS:
         lowered = body.lower()
         if "subagent" not in lowered and "agent team" not in lowered:
@@ -156,8 +196,13 @@ def validate_workflow_yaml() -> list[str]:
         workflow_paths.extend(sorted(ROOT_WORKFLOW_DIR.glob("*.yml")))
 
     for workflow in workflow_paths:
+        workflow_text = workflow.read_text(encoding="utf-8")
+        if "Configure " in workflow_text and re.search(r"^\s*exit 1\s*$", workflow_text, re.MULTILINE):
+            errors.append(
+                f"{workflow.relative_to(ROOT)}: placeholder command block must not fail by default"
+            )
         try:
-            document = yaml.safe_load(workflow.read_text(encoding="utf-8"))
+            document = yaml.safe_load(workflow_text)
         except yaml.YAMLError as exc:
             errors.append(f"{workflow.relative_to(ROOT)}: invalid YAML: {exc}")
             continue
@@ -172,6 +217,41 @@ def validate_workflow_yaml() -> list[str]:
         if "jobs" not in document:
             errors.append(f"{workflow.relative_to(ROOT)}: missing jobs")
 
+    return errors
+
+
+def parse_state_template_keys() -> set[str]:
+    if not STATE_TEMPLATE.exists():
+        return set()
+    frontmatter, _ = split_frontmatter(STATE_TEMPLATE.read_text(encoding="utf-8"))
+    return set(frontmatter.keys())
+
+
+def validate_state_template() -> list[str]:
+    errors: list[str] = []
+    keys = parse_state_template_keys()
+    if not keys:
+        return [f"{STATE_TEMPLATE.relative_to(ROOT)}: missing or invalid state frontmatter"]
+    missing = sorted(STATE_SCHEMA_KEYS - keys)
+    extra = sorted(keys - STATE_SCHEMA_KEYS)
+    if missing:
+        errors.append(
+            f"{STATE_TEMPLATE.relative_to(ROOT)}: missing required state keys: {', '.join(missing)}"
+        )
+    if extra:
+        errors.append(
+            f"{STATE_TEMPLATE.relative_to(ROOT)}: unexpected state keys: {', '.join(extra)}"
+        )
+
+    referenced = set()
+    for skill in SKILLS_DIR.glob("*/SKILL.md"):
+        body = skill.read_text(encoding="utf-8")
+        referenced.update(re.findall(r"`(?:df state (?:get|set) <TICKET-ID> )?([a-z][a-z0-9_]+)`", body))
+    stale = sorted(key for key in referenced if key.endswith("_path") and key not in keys)
+    if stale:
+        errors.append(
+            f"{STATE_TEMPLATE.relative_to(ROOT)}: stale state key references: {', '.join(stale)}"
+        )
     return errors
 
 
@@ -266,6 +346,7 @@ def main() -> int:
     for skill_dir in sorted(path for path in SKILLS_DIR.iterdir() if path.is_dir()):
         errors.extend(validate_skill(skill_dir))
 
+    errors.extend(validate_state_template())
     errors.extend(validate_workflow_yaml())
     errors.extend(validate_claude_plugin())
 

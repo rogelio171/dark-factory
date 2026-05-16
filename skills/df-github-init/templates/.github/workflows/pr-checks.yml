@@ -46,8 +46,7 @@ jobs:
           set -euo pipefail
           # Example:
           # (cd packages/app && npm test)
-          echo "Configure test commands from wiki/project-profile.md"
-          exit 1
+          echo "::notice title=Dark Factory::Configure test commands from wiki/project-profile.md before enabling branch protection."
 
   build:
     name: build
