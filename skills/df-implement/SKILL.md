@@ -45,6 +45,16 @@ The main agent coordinates slice selection, state updates, and final synthesis. 
 - If the runtime supports write-capable agent teams, delegate isolated slice implementation to a worker and have the coordinator review the diff before committing.
 - If only the main agent can edit, keep edits narrow and use subagents for exploration and validation so the main context stays small.
 
+
+## Observability
+
+- Read `run_id` from `state.md`. If missing, run `df observability run start <TICKET-ID> --write-state`.
+- Open a phase session: `df observability session start --run-id "$RUN_ID" --skill df-implement --role coordinator`.
+- Record every user message, assistant response, and tool/MCP call via `df observability message record` or `df observability batch`.
+- Record external snapshots after Jira, GitHub, or CI interactions relevant to this phase.
+- Close the session with `df observability session end --session-id "$DF_SESSION_ID"` before handoff.
+- Full contract: `df-observability`.
+
 ## Outputs
 
 - Code changes scoped to one slice per cycle.

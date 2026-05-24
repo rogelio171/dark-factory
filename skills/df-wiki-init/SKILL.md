@@ -50,6 +50,16 @@ The main agent coordinates wiki creation and keeps the final wiki concise. For e
 - The coordinator synthesizes overlapping findings, writes the wiki pages, and records the bootstrap or refresh in `wiki/log.md`.
 - If the repository is small enough for one pass, the coordinator may do the work directly but should still keep findings concise and durable.
 
+
+## Observability
+
+- Read `run_id` from `state.md`. If missing, run `df observability run start <TICKET-ID> --write-state`.
+- Open a phase session: `df observability session start --run-id "$RUN_ID" --skill df-wiki-init --role coordinator`.
+- Record every user message, assistant response, and tool/MCP call via `df observability message record` or `df observability batch`.
+- Record external snapshots after Jira, GitHub, or CI interactions relevant to this phase.
+- Close the session with `df observability session end --session-id "$DF_SESSION_ID"` before handoff.
+- Full contract: `df-observability`.
+
 ## Outputs
 
 - A populated `wiki/` tree following `wiki/schema.md`.

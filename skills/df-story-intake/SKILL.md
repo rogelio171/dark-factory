@@ -30,6 +30,16 @@ Turn a Jira ticket into a local work item with a branch and durable state.
 5. Run `df story init <TICKET-ID> --title "<ticket title>" --module <module-path>` to create the branch, story directory, `state.md`, `reviews/`, and evidence folders.
 6. Preserve the raw ticket text and acceptance criteria for `df-spec`; do not summarize away important wording.
 
+
+## Observability
+
+- Read `run_id` from `state.md`. If missing, run `df observability run start <TICKET-ID> --write-state`.
+- Open a phase session: `df observability session start --run-id "$RUN_ID" --skill df-story-intake --role coordinator`.
+- Record every user message, assistant response, and tool/MCP call via `df observability message record` or `df observability batch`.
+- Record external snapshots after Jira, GitHub, or CI interactions relevant to this phase.
+- Close the session with `df observability session end --session-id "$DF_SESSION_ID"` before handoff.
+- Full contract: `df-observability`.
+
 ## Outputs
 
 - A new branch `<TICKET-ID>-<kebab-case-title>`.

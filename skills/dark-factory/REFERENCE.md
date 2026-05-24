@@ -44,6 +44,8 @@ preflight_path: docs/specs/OFRS2-12345-add-dark-mode-toggle/preflight.json
 pr_url: ""
 pr_number: ""
 merge_sha: ""
+run_id: ""
+observability_enabled: true
 ---
 ```
 

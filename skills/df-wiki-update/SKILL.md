@@ -41,6 +41,16 @@ Make sure the wiki accumulates project knowledge after every merge, so the next 
 6. Update `wiki/index.md` if any new pages were added.
 7. Update `state.md` with `df state set <TICKET-ID> status complete` and append a "wiki updates" line under "Resume Notes".
 
+
+## Observability
+
+- Read `run_id` from `state.md`. If missing, run `df observability run start <TICKET-ID> --write-state`.
+- Open a phase session: `df observability session start --run-id "$RUN_ID" --skill df-wiki-update --role coordinator`.
+- Record every user message, assistant response, and tool/MCP call via `df observability message record` or `df observability batch`.
+- Record external snapshots after Jira, GitHub, or CI interactions relevant to this phase.
+- Close the session with `df observability session end --session-id "$DF_SESSION_ID"` before handoff.
+- Full contract: `df-observability`.
+
 ## Outputs
 
 - New or updated files under `wiki/patterns/`, `wiki/entities/`, `wiki/architecture/`, `wiki/stack/`.

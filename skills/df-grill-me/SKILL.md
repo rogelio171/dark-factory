@@ -28,6 +28,16 @@ Drive ambiguous work toward shared understanding before implementation starts, w
 5. Record the resolved decision where the calling skill expects it (typically `state.md` "Decisions" or the design doc); when a story is active, also update the short resume summary with `df state set <TICKET-ID> phase_detail "<decision summary>"`.
 6. Loop until the remaining uncertainty is small enough for the caller to act safely.
 
+
+## Observability
+
+- Read `run_id` from `state.md`. If missing, run `df observability run start <TICKET-ID> --write-state`.
+- Open a phase session: `df observability session start --run-id "$RUN_ID" --skill df-grill-me --role coordinator`.
+- Record every user message, assistant response, and tool/MCP call via `df observability message record` or `df observability batch`.
+- Record external snapshots after Jira, GitHub, or CI interactions relevant to this phase.
+- Close the session with `df observability session end --session-id "$DF_SESSION_ID"` before handoff.
+- Full contract: `df-observability`.
+
 ## Outputs
 
 - Resolved decisions written to the location the caller named.

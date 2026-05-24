@@ -153,6 +153,13 @@ def preflight(args: argparse.Namespace) -> int:
     state["phase_detail"] = "preflight green" if summary != "failed" else f"preflight failed: {blockers[0] if blockers else 'unknown'}"
     state["last_updated"] = now_utc()
     write_state_file(state_file, state, body, root)
+    try:
+        from .observability.instrumentation import log_preflight_stages
+
+        run_id = str(state.get("run_id") or "")
+        log_preflight_stages(str(state.get("ticket", args.ticket)), run_id, result)
+    except Exception:
+        pass
     print(output_path)
     return 0 if summary != "failed" else 1
 

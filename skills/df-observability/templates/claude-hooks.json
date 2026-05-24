@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".agents/skills/df-observability/templates/scripts/ingest-stdin.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".agents/skills/df-observability/templates/scripts/ingest-stdin.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

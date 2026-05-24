@@ -36,6 +36,21 @@ Common commands:
 - `df render-pr-body` and `df ship`: create/update PRs and auto-merge low-risk eligible changes.
 - `df pr ...`: poll PR status, reply to and resolve review threads, and retrieve failed-check logs.
 - `df resume`: reconcile disk state with GitHub and print the next skill.
+- `df observability ...`: record and query full agent events, CLI activity, and external snapshots in SQLite.
+
+## Observability
+
+Every target repo gets an observability store at install time:
+
+- `.agents/dark-factory/observability.db` (gitignored SQLite database)
+- `.agents/dark-factory/observability.toml` (retention and redaction policy; default 365 days)
+
+Agents record full conversation history, tool/MCP calls, phase transitions, and GitHub/Jira/CI snapshots through `df observability`. Batch export supports compliance and alerting:
+
+- `df observability export --ticket <TICKET-ID> --format jsonl`
+- `df observability report --since 30d`
+
+See the `df-observability` skill for the recording contract. For compliance and operations detail, see [OBSERVABILITY.md](OBSERVABILITY.md).
 
 ## Phase Flow
 
@@ -144,6 +159,8 @@ The project should also maintain:
 - `wiki/index.md`
 - `wiki/log.md`
 - `wiki/project-profile.md`
+- `.agents/dark-factory/observability.toml`
+- `.agents/dark-factory/observability.db` (gitignored; created at install)
 - `.github/workflows/{pr-checks,pr-open,pr-fix-loop}.yml`
 - `.github/CODEOWNERS`
 - `.github/copilot-instructions.md`

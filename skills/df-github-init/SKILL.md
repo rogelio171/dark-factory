@@ -69,6 +69,16 @@ JSON
 
 `require_code_owner_reviews: true` is what makes CODEOWNERS act as a risk filter: paths without an owner are satisfied by Copilot's review alone; paths with an owner require that owner.
 
+
+## Observability
+
+- Read `run_id` from `state.md`. If missing, run `df observability run start <TICKET-ID> --write-state`.
+- Open a phase session: `df observability session start --run-id "$RUN_ID" --skill df-github-init --role coordinator`.
+- Record every user message, assistant response, and tool/MCP call via `df observability message record` or `df observability batch`.
+- Record external snapshots after Jira, GitHub, or CI interactions relevant to this phase.
+- Close the session with `df observability session end --session-id "$DF_SESSION_ID"` before handoff.
+- Full contract: `df-observability`.
+
 ## Outputs
 
 - `.github/workflows/pr-checks.yml`, `.github/workflows/pr-open.yml`, `.github/workflows/pr-fix-loop.yml` in the target repo.

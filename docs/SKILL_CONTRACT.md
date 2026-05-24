@@ -20,15 +20,16 @@ The `description` is the trigger. Make the "Use when" clause specific, not gener
 3. `## Inputs` - bullet list of files, env vars, MCP tools, or upstream artifacts the skill reads.
 4. `## Preconditions` - bullet list of states that must be true before the skill runs (e.g., "story is `status: implementing`", "`spec.md` exists").
 5. `## Workflow` - numbered list of steps the skill performs.
-6. `## Outputs` - bullet list of files, state changes, side effects, and any data the next skill consumes.
-7. `## Rules` - bullet list of constraints and "do not" rules.
-8. `## Handoff` - one or two sentences naming the next skill or stop condition.
+6. `## Observability` - how the skill records full agent events and external snapshots via `df observability` (required for all skills except `df-observability`, which defines the contract).
+7. `## Outputs` - bullet list of files, state changes, side effects, and any data the next skill consumes.
+8. `## Rules` - bullet list of constraints and "do not" rules.
+9. `## Handoff` - one or two sentences naming the next skill or stop condition.
 
 ## Optional sections
 
 - `## Files` - pointer to `REFERENCE.md` or any templates the skill uses. Place last.
-- Any skill-specific section (e.g., `## Risk Classification` in `df-spec`, `## Evidence Kinds` in `df-evidence`) goes between `Workflow` and `Outputs`.
-- `## Delegation Model` - required for orchestrator or heavy-work skills. Place it between `Workflow` and `Outputs`.
+- Any skill-specific section (e.g., `## Risk Classification` in `df-spec`, `## Evidence Kinds` in `df-evidence`) goes between `Workflow` and `Observability`.
+- `## Delegation Model` - required for orchestrator or heavy-work skills. Place it between `Workflow` and `Observability`.
 
 ## Delegation model
 
@@ -67,7 +68,7 @@ When a skill writes structured documents, those documents live under `templates/
 Before merging a SKILL.md change, confirm:
 
 - [ ] Frontmatter parses (open and close `---`, valid YAML between).
-- [ ] All eight required sections are present in order.
+- [ ] All nine required sections are present in order.
 - [ ] `Preconditions` and `Outputs` are concrete and testable.
 - [ ] `Handoff` names a real next skill or "stop and ask the user".
 - [ ] No phase names are used that are not in `dark-factory/REFERENCE.md`.

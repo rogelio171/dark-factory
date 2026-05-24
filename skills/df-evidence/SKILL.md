@@ -53,6 +53,16 @@ The main agent coordinates the evidence plan and final `INDEX.md`. Prefer subage
 - The coordinator verifies every acceptance criterion has observable proof, writes `evidence/INDEX.md`, and records blockers in `state.md`.
 - Do not let one agent accumulate all app-running, browser, API, and test-output context unless the evidence plan is trivial.
 
+
+## Observability
+
+- Read `run_id` from `state.md`. If missing, run `df observability run start <TICKET-ID> --write-state`.
+- Open a phase session: `df observability session start --run-id "$RUN_ID" --skill df-evidence --role coordinator`.
+- Record every user message, assistant response, and tool/MCP call via `df observability message record` or `df observability batch`.
+- Record external snapshots after Jira, GitHub, or CI interactions relevant to this phase.
+- Close the session with `df observability session end --session-id "$DF_SESSION_ID"` before handoff.
+- Full contract: `df-observability`.
+
 ## Outputs
 
 - Per-kind evidence files under `docs/specs/<ticket>/evidence/<kind>/`.

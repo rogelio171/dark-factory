@@ -47,6 +47,16 @@ The main agent is the review coordinator. It should not be the only reviewer for
 - The coordinator deduplicates findings, decides which fixes are in scope, records review notes, and routes scoped fixes.
 - After fixes, launch a fresh review subagent instead of relying on the same main-context judgment.
 
+
+## Observability
+
+- Read `run_id` from `state.md`. If missing, run `df observability run start <TICKET-ID> --write-state`.
+- Open a phase session: `df observability session start --run-id "$RUN_ID" --skill df-review --role coordinator`.
+- Record every user message, assistant response, and tool/MCP call via `df observability message record` or `df observability batch`.
+- Record external snapshots after Jira, GitHub, or CI interactions relevant to this phase.
+- Close the session with `df observability session end --session-id "$DF_SESSION_ID"` before handoff.
+- Full contract: `df-observability`.
+
 ## Outputs
 
 - One review note per pass under `docs/specs/<ticket>/reviews/`.

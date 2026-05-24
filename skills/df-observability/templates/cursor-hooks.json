@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterAgentResponse": [
+      {
+        "command": ".agents/skills/df-observability/templates/scripts/ingest-stdin.sh",
+        "description": "Record assistant response to Dark Factory observability store"
+      }
+    ],
+    "afterMCPExecution": [
+      {
+        "command": ".agents/skills/df-observability/templates/scripts/ingest-stdin.sh",
+        "description": "Record MCP call to Dark Factory observability store"
+      }
+    ]
+  }
+}

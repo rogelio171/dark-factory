@@ -223,6 +223,14 @@ else
   echo "Installed df CLI: $DEST_BIN/df"
 fi
 
+if [[ "$DRY_RUN" -ne 1 ]]; then
+  if [[ -x "$DEST_BIN/df" ]]; then
+    (cd "$TARGET" && PYTHONPATH="$DEST_LIB${PYTHONPATH:+:$PYTHONPATH}" python3 -m dark_factory observability init) \
+      && echo "Initialized observability store: $TARGET/.agents/dark-factory/" \
+      || echo "WARNING: observability init failed; run 'df observability init' manually" >&2
+  fi
+fi
+
 if git -C "$SCRIPT_DIR" rev-parse HEAD >/dev/null 2>&1; then
   SOURCE_SHA="$(git -C "$SCRIPT_DIR" rev-parse HEAD)"
 else

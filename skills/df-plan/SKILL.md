@@ -36,6 +36,16 @@ Turn `spec.md` into a concrete implementation plan that another agent can execut
 5. Mark `state.md` as `planning` while this skill is active with `df state set <TICKET-ID> status planning`.
 6. When the plan is complete, set the next status to `implementing` with `df state set <TICKET-ID> status implementing`.
 
+
+## Observability
+
+- Read `run_id` from `state.md`. If missing, run `df observability run start <TICKET-ID> --write-state`.
+- Open a phase session: `df observability session start --run-id "$RUN_ID" --skill df-plan --role coordinator`.
+- Record every user message, assistant response, and tool/MCP call via `df observability message record` or `df observability batch`.
+- Record external snapshots after Jira, GitHub, or CI interactions relevant to this phase.
+- Close the session with `df observability session end --session-id "$DF_SESSION_ID"` before handoff.
+- Full contract: `df-observability`.
+
 ## Outputs
 
 - `docs/specs/<ticket>/plan.md` populated from the template.

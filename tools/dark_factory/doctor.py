@@ -13,6 +13,19 @@ def doctor(args) -> int:
     checks.append(("skills", (root / ".agents" / "skills").exists() or (root / "skills").exists(), "skill directory"))
     checks.append(("wiki", (root / "wiki").exists(), "wiki directory"))
     checks.append(("project-profile", (root / "wiki" / "project-profile.md").exists(), "wiki/project-profile.md"))
+    try:
+        from .observability.db import db_path, schema_version, connect, SCHEMA_VERSION
+        from .observability.config import config_path
+
+        checks.append(("observability-db", db_path(root).exists(), str(db_path(root))))
+        if db_path(root).exists():
+            connection = connect(root)
+            version = schema_version(connection)
+            connection.close()
+            checks.append(("observability-schema", version == SCHEMA_VERSION, f"schema_version={version}"))
+        checks.append(("observability-config", config_path(root).exists(), str(config_path(root))))
+    except Exception as exc:
+        checks.append(("observability", False, str(exc)))
     checks.append(("gh", command_exists("gh"), "GitHub CLI"))
     if command_exists("gh"):
         auth = run(["gh", "auth", "status"], cwd=root)

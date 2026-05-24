@@ -20,6 +20,24 @@ def story_init(args: argparse.Namespace) -> int:
     args.branch = branch
     args.slug = args.slug or story_slug(args.ticket, title)
     result = init_state(args)
+    try:
+        from .observability.db import ensure_initialized
+        from .observability.record import start_run
+
+        ensure_initialized(root)
+        run = start_run(
+            args.ticket,
+            story_slug=args.slug,
+            current_phase=str(args.status or "intake"),
+        )
+        from .state import read_state, write_state_file
+
+        state_file, data, body = read_state(args.ticket, root)
+        data["run_id"] = run["run_id"]
+        data["observability_enabled"] = True
+        write_state_file(state_file, data, body, root)
+    except Exception:
+        pass
     if args.acceptance:
         source = Path(args.acceptance.removeprefix("@"))
         if not source.is_absolute():

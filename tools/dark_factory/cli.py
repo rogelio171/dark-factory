@@ -20,6 +20,7 @@ KNOWN_COMMANDS = {
     "doctor",
     "workspace",
     "story",
+    "observability",
 }
 
 
@@ -29,6 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     from . import doctor, evidence, pr, preflight, resume, risk, state, story, tooling, workspace
+    from .observability import cli as observability_cli
 
     state.add_parser(subparsers)
     doctor.add_parser(subparsers)
@@ -40,18 +42,35 @@ def build_parser() -> argparse.ArgumentParser:
     resume.add_parser(subparsers)
     workspace.add_parser(subparsers)
     story.add_parser(subparsers)
+    observability_cli.add_parser(subparsers)
 
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = argv if argv is not None else sys.argv[1:]
     parser = build_parser()
     args = parser.parse_args(argv)
+    command = args.command
+
     try:
-        return int(args.func(args) or 0)
-    except DarkFactoryError as exc:
-        print(f"df: {exc}", file=sys.stderr)
-        return 1
+        from .observability.db import ensure_initialized
+
+        if command != "observability" or getattr(args, "observability_command", "") != "init":
+            ensure_initialized()
+    except Exception:
+        pass
+
+    from .observability.instrumentation import cli_span
+
+    with cli_span(command, argv) as result:
+        try:
+            result.code = int(args.func(args) or 0)
+            return result.code
+        except DarkFactoryError as exc:
+            print(f"df: {exc}", file=sys.stderr)
+            result.code = 1
+            return 1
 
 
 if __name__ == "__main__":

@@ -73,6 +73,15 @@ The main agent is the workflow coordinator, not the primary worker. Keep the mai
 - `risk: medium`: auto-arm merge only when the user confirms.
 - `risk: low` and `auto_merge_eligible: true`: full automation through to merge.
 
+
+## Observability
+
+- Confirm `df observability doctor` passes before story work; the installer runs `df observability init` automatically.
+- Ensure every active story has `run_id` in `state.md`; backfill with `df observability run start <TICKET-ID> --write-state` when missing.
+- Require every invoked phase skill to open a session, record full agent events, and close the session before handoff.
+- Log orchestrator routing decisions with `df observability event record --category workflow.phase --action dispatch --summary "<next skill>"`.
+- Full contract: `df-observability`.
+
 ## Outputs
 
 - A clear next-step decision printed to the user before any phase skill runs.

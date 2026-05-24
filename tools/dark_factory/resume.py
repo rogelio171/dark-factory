@@ -69,6 +69,15 @@ def resume(args: argparse.Namespace) -> int:
     state["last_updated"] = now_utc()
     write_state_file(state_file, state, body, root)
 
+    try:
+        if pr_data:
+            from .observability.instrumentation import log_github_snapshot
+
+            run_id = str(state.get("run_id") or "")
+            log_github_snapshot(run_id, str(state.get("pr_number") or ""), pr_data, snapshot_type="pr_reconcile")
+    except Exception:
+        pass
+
     status = str(state.get("status", "blocked"))
     next_skill = DISPATCH.get(status, "stop")
     reason = note or f"status={status}"

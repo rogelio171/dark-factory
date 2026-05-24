@@ -39,6 +39,16 @@ Open the PR with everything Copilot review and `df-merge` need to drive it to me
    ```
 5. Post the initial Jira summary via Atlassian Rovo MCP, including the PR URL and a one-line evidence summary.
 
+
+## Observability
+
+- Read `run_id` from `state.md`. If missing, run `df observability run start <TICKET-ID> --write-state`.
+- Open a phase session: `df observability session start --run-id "$RUN_ID" --skill df-ship --role coordinator`.
+- Record every user message, assistant response, and tool/MCP call via `df observability message record` or `df observability batch`.
+- Record external snapshots after Jira, GitHub, or CI interactions relevant to this phase.
+- Close the session with `df observability session end --session-id "$DF_SESSION_ID"` before handoff.
+- Full contract: `df-observability`.
+
 ## Outputs
 
 - A new PR on the target repo with the structured body, the `risk:<level>` label, and (when eligible) the `auto_merge_eligible` label.

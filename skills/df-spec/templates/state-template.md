@@ -28,6 +28,8 @@ preflight_path: docs/specs/{{ticket-slug}}/preflight.json
 pr_url: ""
 pr_number: ""
 merge_sha: ""
+run_id: ""
+observability_enabled: true
 ---
 
 # Story State

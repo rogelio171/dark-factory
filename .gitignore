@@ -1,0 +1,6 @@
+
+# Dark Factory observability
+.agents/dark-factory/observability.db
+.agents/dark-factory/observability.db-wal
+.agents/dark-factory/observability.db-shm
+.agents/dark-factory/exports/
