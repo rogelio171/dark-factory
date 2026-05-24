@@ -32,6 +32,16 @@ Recover the current story state from disk (and from GitHub when a PR is already 
 3. Confirm the repository state matches the recorded phase (current branch, checked-in files).
 4. Dispatch to the skill reported by `df resume`.
 
+
+## Observability
+
+- Read `run_id` from `state.md`. If missing, run `df observability run start <TICKET-ID> --write-state`.
+- Open a phase session: `df observability session start --run-id "$RUN_ID" --skill df-resume --role coordinator`.
+- Record every user message, assistant response, and tool/MCP call via `df observability message record` or `df observability batch`.
+- Record external snapshots after Jira, GitHub, or CI interactions relevant to this phase.
+- Close the session with `df observability session end --session-id "$DF_SESSION_ID"` before handoff.
+- Full contract: `df-observability`.
+
 ## Outputs
 
 - Updated `state.md` with the new `last_updated` timestamp and any reconciled PR status.

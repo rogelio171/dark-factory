@@ -29,6 +29,16 @@ Create or refresh `wiki/project-profile.md` so every later phase knows the inten
 5. Review the generated `wiki/project-profile.md` for scope accuracy; edit only decisions that require human context.
 6. Append `wiki/log.md` with the profile date and notable scope decisions.
 
+
+## Observability
+
+- Read `run_id` from `state.md`. If missing, run `df observability run start <TICKET-ID> --write-state`.
+- Open a phase session: `df observability session start --run-id "$RUN_ID" --skill df-project-profile --role coordinator`.
+- Record every user message, assistant response, and tool/MCP call via `df observability message record` or `df observability batch`.
+- Record external snapshots after Jira, GitHub, or CI interactions relevant to this phase.
+- Close the session with `df observability session end --session-id "$DF_SESSION_ID"` before handoff.
+- Full contract: `df-observability`.
+
 ## Outputs
 
 - `wiki/project-profile.md` with module boundaries and validation commands.

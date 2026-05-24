@@ -170,6 +170,8 @@ def init_state(args: argparse.Namespace) -> int:
         "pr_url": "",
         "pr_number": "",
         "merge_sha": "",
+        "run_id": "",
+        "observability_enabled": True,
     }
     data.update(defaults)
     write_state_file(state_file, data, body, root)
@@ -203,6 +205,13 @@ def set_state(args: argparse.Namespace) -> int:
     data[args.field] = value
     data["last_updated"] = now_utc()
     write_state_file(path, data, body)
+    try:
+        from .observability.instrumentation import maybe_log_phase_transition
+
+        run_id = str(data.get("run_id") or "")
+        maybe_log_phase_transition(args.ticket, args.field, value, run_id=run_id)
+    except Exception:
+        pass
     print(path)
     return 0
 

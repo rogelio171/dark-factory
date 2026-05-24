@@ -30,6 +30,16 @@ Protect the user's current checkout and make story work resumable by recording t
 6. Run baseline setup and validation commands from `wiki/project-profile.md` when available.
 7. Record any baseline failure in `state.md` with `df state set <TICKET-ID> phase_detail "<failure summary>"` and ask before continuing.
 
+
+## Observability
+
+- Read `run_id` from `state.md`. If missing, run `df observability run start <TICKET-ID> --write-state`.
+- Open a phase session: `df observability session start --run-id "$RUN_ID" --skill df-workspace --role coordinator`.
+- Record every user message, assistant response, and tool/MCP call via `df observability message record` or `df observability batch`.
+- Record external snapshots after Jira, GitHub, or CI interactions relevant to this phase.
+- Close the session with `df observability session end --session-id "$DF_SESSION_ID"` before handoff.
+- Full contract: `df-observability`.
+
 ## Outputs
 
 - Updated `state.md` with workspace path, isolation status, working root, and validation commands.

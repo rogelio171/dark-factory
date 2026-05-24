@@ -6,7 +6,7 @@ import re
 import tempfile
 from pathlib import Path
 
-from .state import read_state, write_state_file
+from .state import read_state, write_state_file, list_states
 from .utils import DarkFactoryError, now_utc, repo_root, run
 
 
@@ -94,6 +94,24 @@ def current_branch(root: Path) -> str:
     return run(["git", "branch", "--show-current"], cwd=root).stdout.strip()
 
 
+def run_id_for_pr(pr: str) -> str:
+    for state in list_states():
+        if str(state.get("pr_number")) == str(pr):
+            return str(state.get("run_id") or "")
+        if str(state.get("pr_url", "")).rstrip("/").endswith(f"/{pr}"):
+            return str(state.get("run_id") or "")
+    return ""
+
+
+def _log_github(payload: dict, reference: str, snapshot_type: str = "pr_status") -> None:
+    try:
+        from .observability.instrumentation import log_github_snapshot
+
+        log_github_snapshot(run_id_for_pr(reference), reference, payload, snapshot_type=snapshot_type)
+    except Exception:
+        pass
+
+
 def ship(args: argparse.Namespace) -> int:
     root = repo_root()
     state_file, state, body = read_state(args.ticket, root)
@@ -144,6 +162,11 @@ def ship(args: argparse.Namespace) -> int:
     state["pr_number"] = pr_number
     state["last_updated"] = now_utc()
     write_state_file(state_file, state, body, root)
+    _log_github(
+        {"pr_url": pr_url, "pr_number": pr_number, "risk": risk, "auto_merge_eligible": state.get("auto_merge_eligible")},
+        pr_number or pr_url,
+        snapshot_type="pr_ship",
+    )
     print(pr_url)
     return 0
 
@@ -153,6 +176,8 @@ def pr_poll(args: argparse.Namespace) -> int:
     proc = run(["gh", "pr", "view", args.pr, "--json", fields], cwd=repo_root())
     if proc.returncode != 0:
         raise DarkFactoryError(proc.stderr.strip() or "gh pr view failed")
+    payload = json.loads(proc.stdout)
+    _log_github(payload, str(args.pr), snapshot_type="pr_poll")
     print(proc.stdout.strip())
     return 0
 
@@ -185,6 +210,7 @@ def pr_fix_checks(args: argparse.Namespace) -> int:
     proc = run(["gh", "run", "view", "--log-failed"], cwd=repo_root())
     if proc.returncode != 0:
         raise DarkFactoryError(proc.stderr.strip() or "could not fetch failing check logs")
+    _log_github({"log": proc.stdout}, str(args.pr), snapshot_type="ci_failed_log")
     print(proc.stdout)
     return 1
 

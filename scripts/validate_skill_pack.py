@@ -32,10 +32,15 @@ REQUIRED_SECTIONS = [
     "## Inputs",
     "## Preconditions",
     "## Workflow",
+    "## Observability",
     "## Outputs",
     "## Rules",
     "## Handoff",
 ]
+
+OBSERVABILITY_OPTIONAL_SKILLS = {
+    "df-observability",
+}
 
 DELEGATION_REQUIRED_SKILLS = {
     "dark-factory",
@@ -72,6 +77,8 @@ STATE_SCHEMA_KEYS = {
     "pr_url",
     "pr_number",
     "merge_sha",
+    "run_id",
+    "observability_enabled",
 }
 
 
@@ -154,6 +161,8 @@ def validate_skill(skill_dir: Path) -> list[str]:
     for section in REQUIRED_SECTIONS:
         position = section_position(body, section)
         if position == -1:
+            if section == "## Observability" and skill_dir.name in OBSERVABILITY_OPTIONAL_SKILLS:
+                continue
             errors.append(f"{path.relative_to(ROOT)}: missing required section {section!r}")
             continue
         if position < previous:

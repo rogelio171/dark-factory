@@ -53,6 +53,16 @@ The main agent coordinates the PR babysitting loop and owns escalation decisions
 - If the runtime supports write-capable agent teams, delegate one scoped fix at a time and have the coordinator verify the diff before pushing.
 - The coordinator re-fetches PR status after every push, updates `state.md`, replies to threads, and decides when to stop or escalate.
 
+
+## Observability
+
+- Read `run_id` from `state.md`. If missing, run `df observability run start <TICKET-ID> --write-state`.
+- Open a phase session: `df observability session start --run-id "$RUN_ID" --skill df-merge --role coordinator`.
+- Record every user message, assistant response, and tool/MCP call via `df observability message record` or `df observability batch`.
+- Record external snapshots after Jira, GitHub, or CI interactions relevant to this phase.
+- Close the session with `df observability session end --session-id "$DF_SESSION_ID"` before handoff.
+- Full contract: `df-observability`.
+
 ## Outputs
 
 - A merged PR.

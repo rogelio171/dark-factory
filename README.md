@@ -62,6 +62,11 @@ Dark Factory is designed to keep the main agent's context small. The main agent 
 - `df-wiki-update`: append patterns, entities, and log entries after merge
 - `df-github-init`: scaffold the GitHub-side automation (Actions, CODEOWNERS, Copilot instructions)
 - `df-resume`: resume interrupted work from `state.md`
+- `df-observability`: record full agent events and export audit data to SQLite
+
+### 5. Enterprise observability is built in
+
+Every installed target repo gets `.agents/dark-factory/observability.db` (gitignored) plus a committed `observability.toml` retention policy (default 365 days). Agents record full conversation history, tool/MCP calls, phase transitions, and GitHub/Jira/CI snapshots through `df observability`. Batch export supports compliance, debugging, and delivery metrics. See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) for the compliance and operations guide.
 
 ## Repository Layout
 
@@ -71,7 +76,8 @@ dark-factory/
 ├── install.sh
 ├── docs/
 │   ├── SKILL_CONTRACT.md
-│   └── WORKFLOW.md
+│   ├── WORKFLOW.md
+│   └── OBSERVABILITY.md
 └── skills/
     ├── dark-factory/
     ├── using-dark-factory/
@@ -160,7 +166,7 @@ The installer copies each skill directory into:
 .agents/skills/
 ```
 
-inside the target project, installs the deterministic `df` CLI into `.agents/bin/df`, installs the Python harness package under `.agents/lib/dark_factory`, writes a `.dark-factory-version` stamp from the source repo's `git rev-parse HEAD`, and skips any skill whose source content is unchanged since the last install.
+inside the target project, installs the deterministic `df` CLI into `.agents/bin/df`, installs the Python harness package under `.agents/lib/dark_factory`, initializes the SQLite observability store under `.agents/dark-factory/`, writes a `.dark-factory-version` stamp from the source repo's `git rev-parse HEAD`, and skips any skill whose source content is unchanged since the last install.
 
 Use `--runtime cursor|claude|generic` to record the intended runtime surface:
 
@@ -186,6 +192,8 @@ This will create:
 ...
 ~/dev/my-app/.agents/bin/df
 ~/dev/my-app/.agents/lib/dark_factory
+~/dev/my-app/.agents/dark-factory/observability.toml
+~/dev/my-app/.agents/dark-factory/observability.db   # gitignored
 ```
 
 ## Deterministic Harness CLI
@@ -205,15 +213,50 @@ df render-pr-body <ticket>
 df ship <ticket>
 df pr poll|resolve-thread|reply-thread|fix-checks
 df resume [--ticket <ticket>]
+df observability init|doctor|stats|report
+df observability run start|end
+df observability session start|end|show
+df observability message record|event record|snapshot record|batch
+df observability query|tail|run-show|export|prune|migrate-states
 ```
 
-The agent remains responsible for judgment-heavy work: clarification, implementation, review, evidence capture, failure diagnosis, and Copilot comment classification. The CLI owns state mutation, risk path matching, command detection, preflight schema generation, evidence index rendering, PR body rendering, PR plumbing, and resume dispatch.
+The agent remains responsible for judgment-heavy work: clarification, implementation, review, evidence capture, failure diagnosis, and Copilot comment classification. The CLI owns state mutation, risk path matching, command detection, preflight schema generation, evidence index rendering, PR body rendering, PR plumbing, resume dispatch, and observability recording/query/export.
 
 ## What Gets Created in the Target Project
 
-When Dark Factory runs inside a target project, it creates two kinds of artifacts.
+When Dark Factory runs inside a target project, it creates three kinds of artifacts.
 
-### 1. Project wiki
+### 1. Observability store
+
+Installed automatically by `install.sh`:
+
+```text
+.agents/dark-factory/
+├── observability.toml      # retention + redaction policy (committed)
+├── observability.db        # SQLite store (gitignored)
+├── redaction-patterns.txt  # optional custom secret/PII patterns
+└── exports/                # batch export output (gitignored)
+```
+
+Every `df` command, phase transition, preflight run, and GitHub/Jira snapshot can be recorded here. Agents also persist full conversation history (user, assistant, tool/MCP calls) through `df observability`. See `df-observability` for the agent recording contract and [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) for compliance and operations.
+
+Common operations:
+
+```bash
+df observability doctor
+df observability tail --ticket OFRS2-123
+df observability export --ticket OFRS2-123 --format jsonl
+df observability report --since 30d
+df observability prune --dry-run
+```
+
+For repos that already had story state before observability was added:
+
+```bash
+df observability migrate-states
+```
+
+### 2. Project wiki
 
 ```text
 wiki/
@@ -228,7 +271,7 @@ wiki/
 
 This is the long-lived project knowledge base.
 
-### 2. Story work area
+### 3. Story work area
 
 ```text
 docs/specs/<ticket-slug>/
@@ -245,9 +288,9 @@ docs/specs/<ticket-slug>/
     └── migration/
 ```
 
-This is the durable record for a single story.
+This is the durable record for a single story. `state.md` also carries `run_id`, which links the story to rows in `.agents/dark-factory/observability.db`.
 
-### 3. GitHub-side automation (created by `df-github-init`)
+### 4. GitHub-side automation (created by `df-github-init`)
 
 ```text
 .github/
@@ -320,6 +363,7 @@ The `dark-factory` skill decides what phase to run next:
 - extracts title, description, and acceptance criteria
 - creates the working branch
 - creates the story directory under `docs/specs/`
+- starts a delivery run in the observability store and writes `run_id` into `state.md` (via `df story init`)
 
 ### 3. Clarification
 

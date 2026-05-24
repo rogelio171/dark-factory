@@ -1,0 +1,25 @@
+[retention]
+default_days = 365
+agent_messages_days = 365
+interaction_events_days = 365
+external_snapshots_days = 365
+prune_schedule = weekly
+
+[redaction]
+enabled = true
+patterns_file = .agents/dark-factory/redaction-patterns.txt
+max_content_bytes = 1048576
+
+[export]
+default_format = jsonl
+include_agent_messages = true
+include_snapshots = true
+
+[runtime]
+detect_from_env = true
+
+[compliance]
+append_only = true
+record_cli_commands = true
+record_git_operations = true
+strict_pii = false

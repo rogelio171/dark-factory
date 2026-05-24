@@ -33,6 +33,16 @@ End the clarification phase with a story that is safe to spec: either move direc
 5. If the gaps are material, invoke `df-grill-me` to interview the user one question at a time.
 6. Record the resolved answers in `state.md` under "Decisions" and use `df state set <TICKET-ID> phase_detail "<clarification summary>"` to keep the machine-readable state current.
 
+
+## Observability
+
+- Read `run_id` from `state.md`. If missing, run `df observability run start <TICKET-ID> --write-state`.
+- Open a phase session: `df observability session start --run-id "$RUN_ID" --skill df-clarify --role coordinator`.
+- Record every user message, assistant response, and tool/MCP call via `df observability message record` or `df observability batch`.
+- Record external snapshots after Jira, GitHub, or CI interactions relevant to this phase.
+- Close the session with `df observability session end --session-id "$DF_SESSION_ID"` before handoff.
+- Full contract: `df-observability`.
+
 ## Outputs
 
 - Updated `state.md` with `status: clarifying` and any captured decisions.

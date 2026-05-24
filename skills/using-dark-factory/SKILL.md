@@ -28,6 +28,13 @@ Help the agent decide whether Dark Factory is the right workflow and start it sa
 5. Let the orchestrator check `wiki/`, `wiki/project-profile.md`, and `docs/specs/*/state.md`.
 6. If the repo has multiple modules, do not proceed until `df-project-profile` records the target module scope.
 
+
+## Observability
+
+- Dark Factory stores full agent events in `.agents/dark-factory/observability.db` (gitignored).
+- Export audit data with `df observability export --ticket <TICKET-ID> --format jsonl`.
+- Full contract: `df-observability`.
+
 ## Outputs
 
 - A safe handoff to `dark-factory`, or a concise explanation that the request does not need Dark Factory.

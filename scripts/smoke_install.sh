@@ -53,6 +53,9 @@ fi
 test -f "$TARGET/.agents/skills/.dark-factory-version"
 test -x "$TARGET/.agents/bin/df"
 test -d "$TARGET/.agents/lib/dark_factory"
+test -f "$TARGET/.agents/dark-factory/observability.toml"
+test -f "$TARGET/.agents/dark-factory/observability.db"
+"$TARGET/.agents/bin/df" observability doctor >/tmp/dark-factory-obs-doctor.log
 "$TARGET/.agents/bin/df" --help >/tmp/dark-factory-df-help.log
 
 plain="$TMP_DIR/plain"

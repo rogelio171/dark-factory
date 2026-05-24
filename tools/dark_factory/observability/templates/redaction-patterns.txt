@@ -1,0 +1,2 @@
+# Custom redaction patterns (one regex per line)
+# Example: (?i)my-internal-token\s*=\s*\S+
