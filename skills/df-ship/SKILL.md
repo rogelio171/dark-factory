@@ -28,16 +28,17 @@ Open the PR with everything Copilot review and `df-merge` need to drive it to me
 
 ## Workflow
 
-1. Read `spec.md`, `plan.md`, `state.md`, `preflight.json`, and `evidence/INDEX.md`.
-2. Preview the deterministic PR body with `df render-pr-body <TICKET-ID>` if the user asks to review it.
-3. Run `df ship <TICKET-ID>` to push the branch, create or update the PR, apply risk labels, arm auto-merge when eligible, and write `pr_url`, `pr_number`, and `status: merging` back to `state.md`.
-4. Request Copilot review (defensive; the `pr-open` workflow does this too). If the request fails because Copilot review is not enabled, warn clearly; do not hide the warning in logs:
+1. Invoke `df-audit` in pre-ship mode. Do not continue to step 2 until it returns clean; a not-clean result routes back to the phase skill that owns the gap.
+2. Read `spec.md`, `plan.md`, `state.md`, `preflight.json`, and `evidence/INDEX.md`.
+3. Preview the deterministic PR body with `df render-pr-body <TICKET-ID>` if the user asks to review it.
+4. Run `df ship <TICKET-ID>` to push the branch, create or update the PR, apply risk labels, arm auto-merge when eligible, and write `pr_url`, `pr_number`, and `status: merging` back to `state.md`.
+5. Request Copilot review (defensive; the `pr-open` workflow does this too). If the request fails because Copilot review is not enabled, warn clearly; do not hide the warning in logs:
    ```bash
    gh api -X POST "repos/${REPO}/pulls/${PR_NUMBER}/requested_reviewers" \
      -f reviewers='["copilot-pull-request-reviewer"]' || \
      echo "Copilot reviewer request failed; verify repo Settings -> Code review."
    ```
-5. Post the initial Jira summary via Atlassian Rovo MCP, including the PR URL and a one-line evidence summary.
+6. Post the initial Jira summary via Atlassian Rovo MCP, including the PR URL and a one-line evidence summary.
 
 
 ## Observability
@@ -59,6 +60,7 @@ Open the PR with everything Copilot review and `df-merge` need to drive it to me
 ## Rules
 
 - Never open a PR without a green or warning-only preflight result.
+- Never open a PR without a clean pre-ship `df-audit` pass.
 - Never set `auto_merge_eligible` from this skill; trust what the spec wrote into `state.md`.
 - Never close the Jira story from this skill - that is `df-merge`'s job after merge.
 - Never run `gh pr merge --auto` on a PR with `risk: medium` or `risk: high`.

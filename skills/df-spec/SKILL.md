@@ -59,6 +59,10 @@ Set `auto_merge_eligible: true` only when both:
 
 When `risk` is `medium` or `high`, list the human reviewers required beyond Copilot in `state.md` under "Risk".
 
+### Risk-Model Drift
+
+The path-based matrix above is static; it does not know a path has burned the project before. Before finalizing `risk` and `auto_merge_eligible`, check `wiki/patterns/risk-model-drift.md` (maintained by `df-retro`) for any target path in this story's planned diff. If a path shows up there as a source of past `risk.revert` events, raise `risk` by one level from what the matrix alone would give (low -> medium, medium -> high) and say why in the spec's Risk Assessment section, even though the path-based matrix would otherwise call it low or medium. If `wiki/patterns/risk-model-drift.md` does not exist yet, skip this check; it means `df-retro` has not run yet, not that the paths are clean.
+
 
 ## Observability
 

@@ -148,6 +148,54 @@ class CliPrimitiveTests(unittest.TestCase):
             stage_names = {stage["name"] for stage in result["stages"]}
             self.assertGreaterEqual(stage_names, {"lint", "typecheck", "test", "build", "commit-lint"})
 
+    def _write_pr_fix_loop_workflow(self, tmp_path: Path, configured: bool) -> None:
+        workflows_dir = tmp_path / ".github" / "workflows"
+        workflows_dir.mkdir(parents=True, exist_ok=True)
+        flag = "true" if configured else "false"
+        (workflows_dir / "pr-fix-loop.yml").write_text(
+            f'env:\n  DF_MERGE_RUNTIME_CONFIGURED: "{flag}"\n',
+            encoding="utf-8",
+        )
+
+    def test_doctor_flags_unconfigured_pr_fix_loop_with_eligible_story(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            init_repo(tmp_path)
+            copy_skill_template(tmp_path)
+            self._write_pr_fix_loop_workflow(tmp_path, configured=False)
+
+            run_df(tmp_path, "state", "init", "OFRS2-4", "--title", "Auto Merge Candidate")
+            run_df(tmp_path, "state", "set", "OFRS2-4", "auto_merge_eligible", "true")
+            run_df(tmp_path, "state", "set", "OFRS2-4", "status", "merging")
+
+            result = run_df(tmp_path, "doctor", check=False)
+            self.assertIn("missing\tpr-fix-loop-runtime", result.stdout)
+            self.assertIn("OFRS2-4", result.stdout)
+
+    def test_doctor_ignores_configured_pr_fix_loop(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            init_repo(tmp_path)
+            copy_skill_template(tmp_path)
+            self._write_pr_fix_loop_workflow(tmp_path, configured=True)
+
+            run_df(tmp_path, "state", "init", "OFRS2-5", "--title", "Auto Merge Candidate")
+            run_df(tmp_path, "state", "set", "OFRS2-5", "auto_merge_eligible", "true")
+            run_df(tmp_path, "state", "set", "OFRS2-5", "status", "merging")
+
+            result = run_df(tmp_path, "doctor", check=False)
+            self.assertIn("ok\tpr-fix-loop-runtime", result.stdout)
+
+    def test_doctor_skips_pr_fix_loop_check_without_eligible_story(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            init_repo(tmp_path)
+            copy_skill_template(tmp_path)
+            self._write_pr_fix_loop_workflow(tmp_path, configured=False)
+
+            result = run_df(tmp_path, "doctor", check=False)
+            self.assertNotIn("pr-fix-loop-runtime", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
