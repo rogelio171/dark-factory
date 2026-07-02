@@ -30,7 +30,8 @@ Recover the current story state from disk (and from GitHub when a PR is already 
    - `evidence/INDEX.md`
    - `preflight.json`
 3. Confirm the repository state matches the recorded phase (current branch, checked-in files).
-4. Dispatch to the skill reported by `df resume`.
+4. If `status: blocked`, read `blocked_reason` and `blocked_from` from `state.md` (also printed by `df resume`) and surface them to the user verbatim; do not guess the blocker from chat history. Once the user confirms the underlying issue is fixed, run `df state unblock <TICKET-ID>` to restore `status: <blocked_from>`, then re-run `df resume` to get the next skill.
+5. Dispatch to the skill reported by `df resume`.
 
 
 ## Observability
@@ -71,3 +72,4 @@ Resume into the phase named in `state.md`:
 - `shipping` -> `df-ship`
 - `merging` -> `df-merge`
 - `complete` -> stop and report the merge SHA.
+- `blocked` -> stop; surface `blocked_reason`/`blocked_from` and ask the user to fix it, then `df state unblock <TICKET-ID>` before re-dispatching.

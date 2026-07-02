@@ -57,7 +57,7 @@ Turn `spec.md` into a concrete implementation plan that another agent can execut
 - Keep commands scoped to `target_modules`.
 - Include exact command roots when they differ from repo root.
 - Do not start implementation from this skill.
-- If the spec is too broad for one plan, stop and ask the user to split it.
+- If the spec is too broad for one plan, run `df state block <TICKET-ID> --reason "spec.md is too broad for one plan; split into multiple stories or scopes"`, then stop and ask the user to split it. Once split, `df state unblock <TICKET-ID>` resumes planning.
 
 ## Handoff
 

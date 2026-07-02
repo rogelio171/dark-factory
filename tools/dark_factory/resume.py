@@ -80,7 +80,12 @@ def resume(args: argparse.Namespace) -> int:
 
     status = str(state.get("status", "blocked"))
     next_skill = DISPATCH.get(status, "stop")
-    reason = note or f"status={status}"
+    if status == "blocked":
+        blocked_reason = str(state.get("blocked_reason") or "unspecified")
+        blocked_from = str(state.get("blocked_from") or "unknown")
+        reason = f"blocked_reason={blocked_reason!r} blocked_from={blocked_from}"
+    else:
+        reason = note or f"status={status}"
     print(f"next_skill={next_skill} ticket={ticket} status={status} reason={reason}")
     return 0 if next_skill != "stop" or status == "complete" else 1
 

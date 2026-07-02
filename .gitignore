@@ -1,6 +1,8 @@
 
-# Dark Factory observability
-.agents/dark-factory/observability.db
-.agents/dark-factory/observability.db-wal
-.agents/dark-factory/observability.db-shm
-.agents/dark-factory/exports/
+# Python bytecode cache
+__pycache__/
+*.pyc
+
+# This source repo should never carry an installed target-project harness;
+# .agents/ is only ever created inside a target project by install.sh.
+.agents/

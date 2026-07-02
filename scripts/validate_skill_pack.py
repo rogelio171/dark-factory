@@ -58,6 +58,8 @@ STATE_SCHEMA_KEYS = {
     "branch",
     "status",
     "phase_detail",
+    "blocked_from",
+    "blocked_reason",
     "risk",
     "auto_merge_eligible",
     "started",

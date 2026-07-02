@@ -20,6 +20,8 @@ title: add-dark-mode-toggle
 branch: OFRS2-12345-add-dark-mode-toggle
 status: intake
 phase_detail: ""
+blocked_from: ""
+blocked_reason: ""
 risk: low
 auto_merge_eligible: false
 started: 2026-04-13
@@ -64,7 +66,7 @@ observability_enabled: true
 11. `merging`
 12. `complete`
 
-`blocked` is a non-linear status set by any phase that hits an unrecoverable problem (security comment, scope expansion, closed PR, non-converging auto-fix loop). `df-resume` reads it and routes back to the right place.
+`blocked` is a non-linear status set by any phase that hits an unrecoverable problem (security comment, scope expansion, closed PR, non-converging auto-fix loop, missing external tool/credential). Phases set it with `df state block <TICKET-ID> --reason "<what is broken>"`, which records the phase it interrupted in `blocked_from` and the reason in `blocked_reason`. `df-resume` reads `status: blocked` and stops instead of guessing forward. Once the user confirms the underlying issue is fixed, `df state unblock <TICKET-ID>` restores `status: <blocked_from>` (clearing `blocked_from`/`blocked_reason`) so the same dispatch rules resume the exact phase that was interrupted, from any session, at any time.
 
 ## Dispatch Rules
 
@@ -81,7 +83,7 @@ observability_enabled: true
 | `preflight` | `df-preflight` (then `df-ship` when green) |
 | `shipping` | `df-ship` |
 | `merging` | `df-merge` |
-| `blocked` | stop; print the blocker and ask the user |
+| `blocked` | stop; print `blocked_reason`/`blocked_from` and ask the user; `df state unblock <TICKET-ID>` resumes `blocked_from` once fixed |
 | `complete` | stop; print the merge SHA |
 
 Bootstrap rules (orthogonal to `status`):

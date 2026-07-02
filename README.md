@@ -204,7 +204,7 @@ Core commands:
 
 ```bash
 df doctor --runtime generic
-df state init|get|set|list
+df state init|get|set|list|block|unblock
 df detect-tooling
 df classify-risk --diff-base origin/main
 df preflight <ticket>
@@ -532,6 +532,10 @@ Check that Playwright MCP is available and that the target project can actually 
 ### The workflow was interrupted
 
 Use `df-resume`. The intended source of truth is `docs/specs/<ticket>/state.md`, not the previous chat thread.
+
+### The workflow is blocked on something only I can fix
+
+Check `docs/specs/<ticket>/state.md` for `status: blocked`, `blocked_reason`, and `blocked_from` (also printed by `df resume`). Fix the underlying issue (credentials, scope decision, closed PR, etc.), then run `df state unblock <TICKET-ID>` to restore `status: <blocked_from>` and continue with `df-resume`. This works from any session, at any time, because the blocker and its cause are recorded on disk rather than in chat history.
 
 ### The wiki is stale
 

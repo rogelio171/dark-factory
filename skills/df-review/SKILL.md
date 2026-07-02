@@ -69,7 +69,7 @@ The main agent is the review coordinator. It should not be the only reviewer for
 - Keep spec compliance, code quality, test adequacy, and module-boundary safety as separate review concerns.
 - Save findings under `docs/specs/<ticket>/reviews/`.
 - Do not ignore failing tests while closing review issues.
-- If a requested fix would expand scope, stop and ask the user.
+- If a requested fix would expand scope, run `df state block <TICKET-ID> --reason "review finding requires scope expansion: <summary>"` and stop to ask the user; `df state unblock <TICKET-ID>` resumes the review loop once the user decides.
 - Do not collapse multiple critical findings into one fix commit; keep changes scoped.
 - Prefer subagents or agent teams for review passes; the coordinator owns categorization, scope control, and state updates.
 

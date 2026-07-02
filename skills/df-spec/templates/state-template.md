@@ -4,6 +4,8 @@ title: kebab-case-title
 branch: TICKET-ID-kebab-case-title
 status: intake
 phase_detail: ""
+blocked_from: ""
+blocked_reason: ""
 risk: low
 auto_merge_eligible: false
 started: YYYY-MM-DD
@@ -78,6 +80,7 @@ observability_enabled: true
 ## Blockers
 
 - None
+- When blocked, use `df state block <ticket> --reason "<what is broken and what the user must fix>"` instead of hand-editing `status`; it records `blocked_from` so `df state unblock <ticket>` can resume the exact phase once the user confirms the fix.
 
 ## Pull Request
 
