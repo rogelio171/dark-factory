@@ -5,6 +5,37 @@ from pathlib import Path
 from .utils import command_exists, repo_root, run
 
 
+def _pr_fix_loop_check(root: Path) -> tuple[str, bool, str] | None:
+    """Warn when auto-merge-eligible stories exist but the pr-fix-loop
+    runtime placeholder was never wired up, so automation silently no-ops."""
+    from .state import list_states
+
+    workflow_path = root / ".github" / "workflows" / "pr-fix-loop.yml"
+    if not workflow_path.exists():
+        return None
+
+    eligible = [
+        item
+        for item in list_states(root)
+        if item.get("auto_merge_eligible") in (True, "true", "True")
+        and str(item.get("status")) in {"merging", "complete"}
+    ]
+    if not eligible:
+        return None
+
+    configured = 'DF_MERGE_RUNTIME_CONFIGURED: "true"' in workflow_path.read_text(encoding="utf-8")
+    if configured:
+        return ("pr-fix-loop-runtime", True, "DF_MERGE_RUNTIME_CONFIGURED=true")
+
+    tickets = ", ".join(str(item.get("ticket")) for item in eligible[:3])
+    detail = (
+        f"auto-merge-eligible stories exist ({tickets}) but .github/workflows/pr-fix-loop.yml "
+        'still has DF_MERGE_RUNTIME_CONFIGURED: "false"; replace the AGENT RUNTIME PLACEHOLDER '
+        'and set it to "true", or the fix-loop workflow will keep exiting without acting'
+    )
+    return ("pr-fix-loop-runtime", False, detail)
+
+
 def doctor(args) -> int:
     root = repo_root()
     checks: list[tuple[str, bool, str]] = []
@@ -30,6 +61,13 @@ def doctor(args) -> int:
     if command_exists("gh"):
         auth = run(["gh", "auth", "status"], cwd=root)
         checks.append(("gh-auth", auth.returncode == 0, "GitHub CLI authentication"))
+
+    try:
+        pr_fix_loop_check = _pr_fix_loop_check(root)
+        if pr_fix_loop_check:
+            checks.append(pr_fix_loop_check)
+    except Exception as exc:
+        checks.append(("pr-fix-loop-runtime", False, str(exc)))
 
     if args.runtime == "cursor":
         checks.append(("cursor-runtime", (root / ".agents" / "skills").exists(), ".agents/skills for Cursor/generic discovery"))

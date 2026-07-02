@@ -55,8 +55,8 @@ test -x "$TARGET/.agents/bin/df"
 test -d "$TARGET/.agents/lib/dark_factory"
 test -f "$TARGET/.agents/dark-factory/observability.toml"
 test -f "$TARGET/.agents/dark-factory/observability.db"
-"$TARGET/.agents/bin/df" observability doctor >/tmp/dark-factory-obs-doctor.log
-"$TARGET/.agents/bin/df" --help >/tmp/dark-factory-df-help.log
+(cd "$TARGET" && "$TARGET/.agents/bin/df" observability doctor) >/tmp/dark-factory-obs-doctor.log
+(cd "$TARGET" && "$TARGET/.agents/bin/df" --help) >/tmp/dark-factory-df-help.log
 
 plain="$TMP_DIR/plain"
 mkdir -p "$plain"

@@ -41,8 +41,8 @@ Take a PR from "open" to "merged + Jira done + wiki updated" without human inter
    2. Write `merge_sha` into `state.md`.
    3. Post the final Jira summary via Atlassian Rovo MCP, including merge SHA and a recap of what changed.
    4. Transition the Jira ticket to its done state.
-   5. Invoke `df-wiki-update`.
-   6. Set `state.md` to `status: complete`.
+   5. Invoke `df-audit` in post-merge mode. It tolerates the wiki update not having run yet, but everything else (merge SHA, thread resolution, Jira status, risk-revert recording) must already be clean. A not-clean result stays in `status: merging` or escalates via `df state block`; do not continue to step 6.
+   6. Invoke `df-wiki-update`, which sets `state.md` to `status: complete` as its own final step.
 
 ## Delegation Model
 
@@ -77,6 +77,7 @@ The main agent coordinates the PR babysitting loop and owns escalation decisions
 - Never push to a branch that is not the PR's head branch.
 - Never resolve a review thread you did not address.
 - Never close the PR. If forward progress is impossible, run `df state block "$TICKET" --reason "<why>"` and stop.
+- Never set `status: complete` without a clean post-merge `df-audit` pass.
 - Never auto-merge a PR that is `risk: medium`, `risk: high`, or missing `auto_merge_eligible: true`. Wait for the required human reviewer.
 - Always reply on a thread before resolving it; the reply explains what was done.
 - Always re-fetch PR status after pushing fixes; never rely on the previous poll.

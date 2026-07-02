@@ -29,6 +29,9 @@ Turn a Jira ticket into a local work item with a branch and durable state.
 4. If the repo is multi-module and the ticket does not identify the target module, ask the user before continuing.
 5. Run `df story init <TICKET-ID> --title "<ticket title>" --module <module-path>` to create the branch, story directory, `state.md`, `reviews/`, and evidence folders.
 6. Preserve the raw ticket text and acceptance criteria for `df-spec`; do not summarize away important wording.
+7. Check whether this ticket reverts, hotfixes, or is otherwise a direct correction of a previously auto-merged Dark Factory story (the ticket text says so, it links a prior ticket, or `wiki/log.md` shows a very recent merge to the same paths). If so:
+   - Note the original ticket ID in `state.md` under "Decisions" so `df-spec` can see it.
+   - Record `df observability event record --category risk.revert --ticket <ORIGINAL-TICKET-ID> --status failure --summary "<what regressed and why>"` so `df-retro` can pick it up as a risk-model drift signal. Do this even if the original ticket's run has already ended.
 
 
 ## Observability

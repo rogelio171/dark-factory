@@ -35,8 +35,17 @@ Find and fix issues before evidence collection and PR creation.
 6. Fix the critical findings.
 7. Re-run scoped tests and relevant checks.
 8. Launch fresh review subagents.
-9. Repeat until no critical findings remain.
+9. Repeat until no critical findings remain, subject to the convergence cap below.
 10. Record the clean pass with `df state set <TICKET-ID> phase_detail "review clean"` before advancing.
+
+## Convergence Cap
+
+The number of existing `docs/specs/<ticket>/reviews/<n>.md` files is the pass count; it is durable and survives session interruption, so no extra state field is needed.
+
+- After saving the findings for pass 3 (i.e. `reviews/3.md` exists) and a critical finding is still open, stop fixing and re-reviewing.
+- Instead, run `df state block <TICKET-ID> --reason "review loop did not converge after 3 passes: <summary of the still-open critical finding>"` and stop.
+- Do not start a 4th pass on the same finding without the user confirming a scope or approach change; `df state unblock <TICKET-ID>` resumes the loop once they do.
+- A critical finding that keeps reappearing after a fix is a signal the spec, plan, or approach is wrong, not that another pass will fix it.
 
 ## Delegation Model
 

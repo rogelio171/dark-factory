@@ -54,15 +54,17 @@ Dark Factory is designed to keep the main agent's context small. The main agent 
 - `df-spec`: create the durable PRD and state files, including risk classification
 - `df-plan`: create the exact implementation plan
 - `df-implement`: implement through a strict red-green-refactor loop
-- `df-review`: run a spec-aware review/fix/re-review loop
+- `df-review`: run a spec-aware review/fix/re-review loop, capped at 3 passes before escalating
 - `df-evidence`: collect multi-kind evidence (UI, API, CLI, unit, migration)
 - `df-preflight`: mirror CI locally before opening the PR
+- `df-audit`: deterministic process/artifact audit run pre-ship and post-merge, separate from code review
 - `df-ship`: open the PR, label risk, request Copilot review, arm auto-merge only for low-risk eligible changes
 - `df-merge`: babysit the PR through Copilot review and CI until merged
 - `df-wiki-update`: append patterns, entities, and log entries after merge
 - `df-github-init`: scaffold the GitHub-side automation (Actions, CODEOWNERS, Copilot instructions)
 - `df-resume`: resume interrupted work from `state.md`
 - `df-observability`: record full agent events and export audit data to SQLite
+- `df-retro`: mine observability data across stories for recurring blockers and risk-model drift, feeding `wiki/patterns/`
 
 ### 5. Enterprise observability is built in
 
@@ -93,11 +95,13 @@ dark-factory/
     ├── df-review/
     ├── df-evidence/
     ├── df-preflight/
+    ├── df-audit/
     ├── df-ship/
     ├── df-merge/
     ├── df-wiki-update/
     ├── df-github-init/
-    └── df-resume/
+    ├── df-resume/
+    └── df-retro/
 ```
 
 ## Prerequisites
@@ -481,12 +485,24 @@ Use df-merge on the current story's PR.
 
 Dark Factory removes humans from the review path on low-risk changes by combining four pieces:
 
-1. `df-spec` writes a `risk` and `auto_merge_eligible` field into `state.md` based on which paths the change touches.
+1. `df-spec` writes a `risk` and `auto_merge_eligible` field into `state.md` based on which paths the change touches, raised a level automatically when `wiki/patterns/risk-model-drift.md` flags one of those paths as a repeat offender.
 2. `df-github-init` scaffolds GitHub Actions, a CODEOWNERS file used as a risk filter, and `copilot-instructions.md` derived from the project wiki so Copilot reviews against project conventions.
-3. `df-ship` opens the PR, requests Copilot review, and arms `gh pr merge --auto --squash` when the change is low risk.
-4. `df-merge` runs as the GitHub-side fix loop: it watches required checks, classifies Copilot comments, applies the auto-fix-eligible ones (lint, types, naming, missing tests, docstrings, dead code, suggested refactors with concrete code), and escalates to a human only on CODEOWNERS paths, security-tagged comments, or scope-expanding requests.
+3. `df-audit` runs a deterministic pre-ship checklist (spec/plan/review consistency, evidence completeness, current preflight, risk fields actually set) before `df-ship` opens the PR, so automation is never armed on an incomplete story.
+4. `df-ship` opens the PR, requests Copilot review, and arms `gh pr merge --auto --squash` when the change is low risk.
+5. `df-merge` runs as the GitHub-side fix loop: it watches required checks, classifies Copilot comments, applies the auto-fix-eligible ones (lint, types, naming, missing tests, docstrings, dead code, suggested refactors with concrete code), and escalates to a human only on CODEOWNERS paths, security-tagged comments, or scope-expanding requests.
+6. `df-audit` runs again post-merge (thread resolution, Jira closure, observability sessions closed) before `state.md` moves to `status: complete`.
 
-The fix-loop workflow ships runtime-agnostic and disabled by default. `df-github-init` writes a clearly marked `AGENT RUNTIME PLACEHOLDER` step inside `.github/workflows/pr-fix-loop.yml` with three commented examples (Cursor CLI, Cursor Cloud, Claude Code Action). Pick the one that matches your tooling, replace the placeholder, and set `DF_MERGE_RUNTIME_CONFIGURED: "true"`. Until then, the workflow exits successfully without attempting fixes.
+The fix-loop workflow ships runtime-agnostic and disabled by default. `df-github-init` writes a clearly marked `AGENT RUNTIME PLACEHOLDER` step inside `.github/workflows/pr-fix-loop.yml` with three commented examples (Cursor CLI, Cursor Cloud, Claude Code Action). Pick the one that matches your tooling, replace the placeholder, and set `DF_MERGE_RUNTIME_CONFIGURED: "true"`. Until then, the workflow exits successfully without attempting fixes, and `df doctor` will start warning (`pr-fix-loop-runtime`) once a story reaches `status: merging` or `status: complete` with `auto_merge_eligible: true` while the placeholder is still unconfigured.
+
+## Continuous Improvement
+
+Individual stories can each look healthy while the same failure mode recurs across many of them. `df-retro` closes that loop:
+
+- Whenever a new story reverts or hotfixes a previously auto-merged story, `df-story-intake` records a `risk.revert` observability event referencing the original ticket.
+- `df-retro` (run on a cadence, e.g. every 10 merges or monthly) mines `df observability report` and `risk.revert` events across all stories, and writes durable findings into `wiki/patterns/risk-model-drift.md` (paths that keep regressing despite a low-risk classification) and `wiki/patterns/recurring-blockers.md` (blockers that keep stopping stories for the same reason).
+- `df-spec` reads `wiki/patterns/risk-model-drift.md` on every new story and raises `risk` by one level for paths that show up there, even though the static path-based matrix alone would call them low or medium risk.
+
+This does not change any in-flight story's risk automatically; it only changes what the *next* story classifies that path as, and always leaves a paper trail for why.
 
 ## Maintaining This Skill Pack
 
