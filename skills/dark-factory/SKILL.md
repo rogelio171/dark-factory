@@ -54,7 +54,7 @@ In order. The first matching condition wins.
     - If `risk: medium` or `risk: high`, stop and ask the user to confirm before invoking `df-ship`.
 14. If `state.md` is `status: shipping`, invoke `df-ship` (idempotent: it will edit the existing PR if one exists).
 15. If `state.md` is `status: merging`, invoke `df-merge`.
-16. If `state.md` is `status: blocked`, surface the blocker and ask the user how to proceed.
+16. If `state.md` is `status: blocked`, print `blocked_reason` and `blocked_from` from `state.md`, surface the blocker, and ask the user to fix it. Once the user confirms the fix, run `df state unblock <TICKET-ID>` to restore `status: <blocked_from>` and re-dispatch using these same rules; do not guess a different phase from chat memory.
 17. If `state.md` is `status: complete`, report the merge SHA and stop.
 18. If a session was interrupted and the user asks to resume, invoke `df-resume`.
 
@@ -91,7 +91,7 @@ The main agent is the workflow coordinator, not the primary worker. Keep the mai
 
 - Read `docs/specs/*/state.md` before choosing a phase.
 - Advance one phase at a time and keep `state.md` current.
-- Stop and ask the user if a required external integration is unavailable (Atlassian Rovo MCP for `df-story-intake`, `gh` for `df-ship`/`df-merge`, Playwright MCP for `df-evidence` UI kind).
+- Stop and ask the user if a required external integration is unavailable (Atlassian Rovo MCP for `df-story-intake`, `gh` for `df-ship`/`df-merge`, Playwright MCP for `df-evidence` UI kind). If a story has already been initialized (`state.md` exists), record the blocker with `df state block <TICKET-ID> --reason "<missing integration>"` before stopping, so any agent in a later session sees it via `df resume` instead of relying on this chat.
 - Prefer existing wiki pages over rediscovering the same context.
 - Keep implementation minimal and acceptance-criteria driven.
 - Prefer subagents or agent teams for context-heavy work; the orchestrator coordinates, records, and synthesizes.

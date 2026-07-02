@@ -59,6 +59,44 @@ class CliPrimitiveTests(unittest.TestCase):
             self.assertIn("AC-1 toggle works", index)
             self.assertIn("unit/ac-1.txt", index)
 
+    def test_state_block_and_unblock_resumes_recorded_phase(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            init_repo(tmp_path)
+            copy_skill_template(tmp_path)
+
+            run_df(tmp_path, "state", "init", "OFRS2-3", "--title", "Blocked Story", "--status", "implementing")
+
+            run_df(tmp_path, "state", "block", "OFRS2-3", "--reason", "gh auth status is unauthenticated")
+            status = run_df(tmp_path, "state", "get", "OFRS2-3", "status").stdout.strip()
+            self.assertEqual(status, "blocked")
+            blocked_from = run_df(tmp_path, "state", "get", "OFRS2-3", "blocked_from").stdout.strip()
+            self.assertEqual(blocked_from, "implementing")
+            blocked_reason = run_df(tmp_path, "state", "get", "OFRS2-3", "blocked_reason").stdout.strip()
+            self.assertEqual(blocked_reason, "gh auth status is unauthenticated")
+
+            resume_proc = run_df(tmp_path, "resume", "--ticket", "OFRS2-3", check=False)
+            self.assertEqual(resume_proc.returncode, 1)
+            resume_output = resume_proc.stdout
+            self.assertIn("next_skill=stop", resume_output)
+            self.assertIn("blocked_from=implementing", resume_output)
+
+            # Blocking again while already blocked must not clobber the original phase.
+            run_df(tmp_path, "state", "block", "OFRS2-3", "--reason", "still waiting on gh auth")
+            blocked_from = run_df(tmp_path, "state", "get", "OFRS2-3", "blocked_from").stdout.strip()
+            self.assertEqual(blocked_from, "implementing")
+
+            run_df(tmp_path, "state", "unblock", "OFRS2-3")
+            status = run_df(tmp_path, "state", "get", "OFRS2-3", "status").stdout.strip()
+            self.assertEqual(status, "implementing")
+            blocked_from = run_df(tmp_path, "state", "get", "OFRS2-3", "blocked_from").stdout.strip()
+            self.assertEqual(blocked_from, "")
+            blocked_reason = run_df(tmp_path, "state", "get", "OFRS2-3", "blocked_reason").stdout.strip()
+            self.assertEqual(blocked_reason, "")
+
+            unblock_again = run_df(tmp_path, "state", "unblock", "OFRS2-3", check=False)
+            self.assertNotEqual(unblock_again.returncode, 0)
+
     def test_detect_tooling_json(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

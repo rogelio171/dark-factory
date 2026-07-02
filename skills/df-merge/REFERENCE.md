@@ -102,7 +102,9 @@ gh api -X POST "repos/${OWNER}/${REPO}/pulls/${PR_NUMBER}/comments/${COMMENT_ID}
 | Condition | Action |
 | --- | --- |
 | `state == "MERGED"` | Run post-merge steps and set `status: complete`. |
-| `state == "CLOSED"` (not merged) | Set `status: blocked`, reason "PR closed", stop. |
-| Escalate-tagged comment | Reply, set `status: blocked` with the comment ID, stop. |
-| Required check failure with no recipe | Reply on the PR, set `status: blocked`, stop. |
-| Auto-fix loop applied 5+ commits with no convergence | Stop, set `status: blocked`, reason "auto-fix not converging". |
+| `state == "CLOSED"` (not merged) | `df state block "$TICKET" --reason "PR closed"`, stop. |
+| Escalate-tagged comment | Reply, `df state block "$TICKET" --reason "<comment ID>: <summary>"`, stop. |
+| Required check failure with no recipe | Reply on the PR, `df state block "$TICKET" --reason "<check>: <failure summary>"`, stop. |
+| Auto-fix loop applied 5+ commits with no convergence | Stop, `df state block "$TICKET" --reason "auto-fix not converging"`. |
+
+`df state block` records `blocked_from: merging` automatically. Once the user resolves the blocker, `df state unblock "$TICKET"` restores `status: merging` so `df-merge` can be re-invoked without guessing where it left off.

@@ -61,7 +61,7 @@ The main agent coordinates preflight and writes the final `preflight.json`. Pref
 - Any `failed` stage blocks `df-ship`; `warning` stages are recorded but do not block.
 - Do not modify production code from this skill. If a fix is needed, drop back to `df-implement`.
 - Do not fetch from the network beyond what the dependency audit naturally requires.
-- Stop and ask the user if `gh auth status` reports the CLI is unauthenticated, since `df-ship` will need it next.
+- If `gh auth status` reports the CLI is unauthenticated, run `df state block <TICKET-ID> --reason "gh CLI is unauthenticated; run 'gh auth login' and re-run df-preflight"`, then stop and ask the user. Once the user confirms `gh auth status` is clean, resume with `df state unblock <TICKET-ID>` followed by `df-preflight`.
 - Prefer subagents or agent teams for tooling detection and diagnostics; the coordinator owns the final preflight decision.
 - Avoid whole-repo fallback commands unless `target_modules` says the whole repo is in scope.
 - Secret scans may run at repo root, but note that they are intentionally repo-wide in `preflight.json`.

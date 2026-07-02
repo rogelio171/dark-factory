@@ -28,7 +28,7 @@ The installed CLI lives at `.agents/bin/df` and imports its package from `.agent
 Common commands:
 
 - `df doctor --runtime cursor|claude|generic`: verify git, `gh`, skills, wiki, and runtime surface.
-- `df state init|get|set|list`: create and safely mutate story state.
+- `df state init|get|set|list|block|unblock`: create and safely mutate story state, including durable, resumable blockers.
 - `df detect-tooling`: detect modules and validation commands, then write `wiki/project-profile.md`.
 - `df classify-risk`: apply the path-based risk matrix.
 - `df preflight`: run local CI mirror and write `preflight.json`.
@@ -142,6 +142,12 @@ See the `df-observability` skill for the recording contract. For compliance and 
 
 - `df-resume` reads `state.md` and supporting artifacts to continue safely after interruptions, including resuming the merging phase from the recorded `pr_url`.
 
+### Blocked / unblock lifecycle
+
+Any phase can hit something it cannot resolve on its own: a missing credential, an unauthenticated `gh` CLI, a review comment that expands scope, a closed PR, a spec too broad to plan. When that happens, the phase runs `df state block <TICKET-ID> --reason "<what is broken and what the user must fix>"` instead of stopping silently. This writes `status: blocked`, records the interrupted phase in `blocked_from`, and stores the reason in `blocked_reason` — all on disk, so any agent in any future session sees the exact same blocker via `df resume` without relying on chat history.
+
+Once the user confirms the underlying issue is fixed, running `df state unblock <TICKET-ID>` restores `status: <blocked_from>` and clears the blocker fields, so the workflow continues from precisely where it stopped. This can happen in the same session or a completely different one, at any time.
+
 ## Durable Artifacts
 
 Each story should end up with:
@@ -176,3 +182,4 @@ The project should also maintain:
 - Copilot review beats human review on low-risk paths; CODEOWNERS is a risk filter, not a default.
 - Auto-merge is armed only when the spec says the change is low risk and the test plan is green.
 - Coordinator context beats single-agent accumulation; use subagents or agent teams for context-heavy work.
+- A blocker recorded on disk beats a blocker described only in chat; `df state block`/`df state unblock` make every stop point resumable by any agent, at any time.

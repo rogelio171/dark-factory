@@ -74,8 +74,8 @@ The main agent coordinates the evidence plan and final `INDEX.md`. Prefer subage
 - Do not claim a criterion is complete without observable proof of the matching kind.
 - One file per important checkpoint; do not bundle multiple criteria into a single screenshot.
 - Use descriptive, stable file names (`criterion-1-toggle-on.png`, not `screenshot-2026-04-19-1.png`).
-- If the app cannot be run or reached for a `ui` or `api` criterion, stop and record the blocker in `state.md`.
-- If a criterion does not fit any of the five kinds, stop and ask the user; do not invent a sixth kind silently.
+- If the app cannot be run or reached for a `ui` or `api` criterion, run `df state block <TICKET-ID> --reason "<what is unreachable and what the user must fix>"` so the blocker survives a session restart, then stop.
+- If a criterion does not fit any of the five kinds, stop and ask the user; do not invent a sixth kind silently. If the ambiguity cannot be resolved in this session, block with `df state block` before stopping.
 - Prefer subagents or agent teams for evidence capture; the coordinator owns coverage mapping and final synthesis.
 
 ## Handoff

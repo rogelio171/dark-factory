@@ -151,6 +151,8 @@ def init_state(args: argparse.Namespace) -> int:
         "branch": branch,
         "status": args.status or "intake",
         "phase_detail": "",
+        "blocked_from": "",
+        "blocked_reason": "",
         "risk": "low",
         "auto_merge_eligible": False,
         "started": today_utc(),
@@ -216,6 +218,51 @@ def set_state(args: argparse.Namespace) -> int:
     return 0
 
 
+def block_state(args: argparse.Namespace) -> int:
+    path, data, body = read_state(args.ticket)
+    current_status = str(data.get("status", ""))
+    if current_status != "blocked":
+        data["blocked_from"] = current_status
+    data["blocked_reason"] = args.reason
+    data["status"] = "blocked"
+    data["last_updated"] = now_utc()
+    write_state_file(path, data, body)
+    try:
+        from .observability.instrumentation import maybe_log_phase_transition
+
+        run_id = str(data.get("run_id") or "")
+        maybe_log_phase_transition(args.ticket, "status", "blocked", run_id=run_id)
+    except Exception:
+        pass
+    print(path)
+    return 0
+
+
+def unblock_state(args: argparse.Namespace) -> int:
+    path, data, body = read_state(args.ticket)
+    if str(data.get("status")) != "blocked":
+        raise DarkFactoryError(f"{args.ticket} is not blocked (status={data.get('status')})")
+    resume_status = args.status or str(data.get("blocked_from") or "")
+    if not resume_status:
+        raise DarkFactoryError(
+            f"{args.ticket} has no recorded blocked_from phase; pass --status explicitly"
+        )
+    data["status"] = resume_status
+    data["blocked_from"] = ""
+    data["blocked_reason"] = ""
+    data["last_updated"] = now_utc()
+    write_state_file(path, data, body)
+    try:
+        from .observability.instrumentation import maybe_log_phase_transition
+
+        run_id = str(data.get("run_id") or "")
+        maybe_log_phase_transition(args.ticket, "status", resume_status, run_id=run_id)
+    except Exception:
+        pass
+    print(path)
+    return 0
+
+
 def list_state_cmd(args: argparse.Namespace) -> int:
     import json
 
@@ -255,3 +302,21 @@ def add_parser(subparsers) -> None:
     list_ = nested.add_parser("list", help="List story states")
     list_.add_argument("--json", action="store_true")
     list_.set_defaults(func=list_state_cmd)
+
+    block = nested.add_parser(
+        "block", help="Mark a story blocked with a durable, resumable reason"
+    )
+    block.add_argument("ticket")
+    block.add_argument("--reason", required=True)
+    block.set_defaults(func=block_state)
+
+    unblock = nested.add_parser(
+        "unblock", help="Clear status: blocked and resume the prior phase"
+    )
+    unblock.add_argument("ticket")
+    unblock.add_argument(
+        "--status",
+        default="",
+        help="Phase to resume into (defaults to the recorded blocked_from)",
+    )
+    unblock.set_defaults(func=unblock_state)

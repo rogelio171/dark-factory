@@ -28,12 +28,12 @@ Take a PR from "open" to "merged + Jira done + wiki updated" without human inter
 2. Loop until terminal:
    1. Fetch PR status with `df pr poll "$PR_NUMBER"`.
    2. If `state == "MERGED"`: break to step 3 (post-merge).
-   3. If `state == "CLOSED"`: stop, set `status: blocked` with reason "PR closed without merge".
+   3. If `state == "CLOSED"`: stop; run `df state block "$TICKET" --reason "PR closed without merge"`.
    4. If any required check failed: run `df pr fix-checks "$PR_NUMBER"` to fetch failing logs, apply a scoped fix per the matrix in [REFERENCE.md](REFERENCE.md), `git push`, then loop.
    5. If Copilot (or another reviewer) submitted `changes_requested`:
       - For each unresolved review comment, classify using the matrix in [REFERENCE.md](REFERENCE.md).
       - For auto-fix-eligible comments: apply the fix, push, reply with `df pr reply-thread`, then resolve with `df pr resolve-thread`.
-      - For escalate comments: post a reply explaining the escalation, set `status: blocked` in `state.md` with the comment ID, and exit.
+      - For escalate comments: post a reply explaining the escalation, then run `df state block "$TICKET" --reason "escalated review comment <comment ID>: <summary>"` and exit.
    6. If checks are green and review is approved and no auto-merge is set, run `gh pr merge "$PR_NUMBER" --squash` only when `risk: low` and `auto_merge_eligible: true`; otherwise leave the merge button for a human.
    7. If nothing changed since the last poll, sleep with backoff (30s, 60s, 120s, capped at 300s).
 3. Post-merge:
@@ -76,7 +76,7 @@ The main agent coordinates the PR babysitting loop and owns escalation decisions
 - Never amend commits that have been pushed.
 - Never push to a branch that is not the PR's head branch.
 - Never resolve a review thread you did not address.
-- Never close the PR. If forward progress is impossible, set `status: blocked` and stop.
+- Never close the PR. If forward progress is impossible, run `df state block "$TICKET" --reason "<why>"` and stop.
 - Never auto-merge a PR that is `risk: medium`, `risk: high`, or missing `auto_merge_eligible: true`. Wait for the required human reviewer.
 - Always reply on a thread before resolving it; the reply explains what was done.
 - Always re-fetch PR status after pushing fixes; never rely on the previous poll.
@@ -85,7 +85,7 @@ The main agent coordinates the PR babysitting loop and owns escalation decisions
 
 ## Handoff
 
-On `status: complete`: return to the `dark-factory` orchestrator. On `status: blocked`: stop and surface the comment that caused the escalation.
+On `status: complete`: return to the `dark-factory` orchestrator. On `status: blocked`: stop and surface the comment that caused the escalation; once the user resolves it, `df state unblock "$TICKET"` restores `status: merging` and `df-merge` can be re-invoked.
 
 ## Files
 
