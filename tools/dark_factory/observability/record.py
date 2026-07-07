@@ -5,7 +5,7 @@ import sqlite3
 import uuid
 from typing import Any
 
-from ..utils import now_utc, repo_root
+from ..utils import DarkFactoryError, now_utc, repo_root
 from .config import load_config
 from .db import connect, detect_runtime, row_to_dict
 from .redaction import content_hash, redact_text
@@ -215,7 +215,7 @@ def record_message(
                 "SELECT run_id FROM agent_sessions WHERE session_id = ?", (session_id,)
             ).fetchone()
             if not row:
-                raise ValueError(f"unknown session_id: {session_id}")
+                raise DarkFactoryError(f"unknown session_id: {session_id}")
             run_id = str(row["run_id"])
         sequence = next_message_sequence(connection, session_id)
         connection.execute(
