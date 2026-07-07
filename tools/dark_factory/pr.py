@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 import tempfile
 from pathlib import Path
 
@@ -150,11 +151,29 @@ def ship(args: argparse.Namespace) -> int:
         pr_number = str(json.loads(view.stdout)["number"]) if view.returncode == 0 else ""
 
     risk = str(state.get("risk", "low"))
-    run(["gh", "pr", "edit", pr_number or pr_url, "--add-label", f"risk:{risk}"], cwd=root)
+    warnings: list[str] = []
+
+    def attempt(description: str, command: list[str]) -> None:
+        proc = run(command, cwd=root)
+        if proc.returncode != 0:
+            detail = proc.stderr.strip() or proc.stdout.strip() or f"exit {proc.returncode}"
+            warnings.append(f"{description}: {detail}")
+            print(f"df: warning: {description}: {detail}", file=sys.stderr)
+
+    attempt(
+        f"could not add label risk:{risk}",
+        ["gh", "pr", "edit", pr_number or pr_url, "--add-label", f"risk:{risk}"],
+    )
     if state.get("auto_merge_eligible") is True:
-        run(["gh", "pr", "edit", pr_number or pr_url, "--add-label", "auto_merge_eligible"], cwd=root)
+        attempt(
+            "could not add label auto_merge_eligible",
+            ["gh", "pr", "edit", pr_number or pr_url, "--add-label", "auto_merge_eligible"],
+        )
     if risk == "low" and state.get("auto_merge_eligible") is True:
-        run(["gh", "pr", "merge", pr_number or pr_url, "--auto", "--squash"], cwd=root)
+        attempt(
+            "could not arm auto-merge on an eligible PR",
+            ["gh", "pr", "merge", pr_number or pr_url, "--auto", "--squash"],
+        )
 
     state["status"] = "merging"
     state["phase_detail"] = "PR open, awaiting Copilot review and CI"
@@ -163,7 +182,13 @@ def ship(args: argparse.Namespace) -> int:
     state["last_updated"] = now_utc()
     write_state_file(state_file, state, body, root)
     _log_github(
-        {"pr_url": pr_url, "pr_number": pr_number, "risk": risk, "auto_merge_eligible": state.get("auto_merge_eligible")},
+        {
+            "pr_url": pr_url,
+            "pr_number": pr_number,
+            "risk": risk,
+            "auto_merge_eligible": state.get("auto_merge_eligible"),
+            "warnings": warnings,
+        },
         pr_number or pr_url,
         snapshot_type="pr_ship",
     )
