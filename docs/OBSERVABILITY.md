@@ -102,7 +102,7 @@ strict_pii = false
 | --- | --- | --- |
 | `default_days` | 365 | Fallback retention for tables without a specific override |
 | `agent_messages_days` | 365 | Full conversation history |
-| `strict_pii` | false | When true, agents should summarize ticket bodies in events only (skill contract) |
+| `strict_pii` | false | When true, agents should summarize ticket bodies in events only (skill contract), and email/phone regex redaction is applied at write time |
 | `max_content_bytes` | 1 MiB | Larger payloads truncated with a `[TRUNCATED]` marker |
 
 View effective config:
@@ -117,7 +117,7 @@ Redaction runs **at write time** before rows are inserted:
 
 - API keys, tokens, Bearer headers, PEM private keys
 - Common GitHub/OpenAI/AWS key patterns
-- Email addresses and phone numbers (regex-based)
+- Email addresses and phone numbers (regex-based, only when `strict_pii = true`; the phone pattern matches any ten-digit number, which mangles ordinary tool output)
 - Custom patterns in `redaction-patterns.txt`
 
 When content is scrubbed or truncated, a `security.redaction` event may be recorded. Treat exported files as sensitive even after redaction — validate against your org's data classification policy.

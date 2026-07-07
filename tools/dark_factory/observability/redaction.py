@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .config import ObservabilityConfig, load_config
 
-DEFAULT_PATTERNS = [
+SECRET_PATTERNS = [
     r"(?i)(api[_-]?key|secret|token|password|authorization)\s*[:=]\s*\S+",
     r"(?i)Bearer\s+[A-Za-z0-9\-._~+/]+=*",
     r"-----BEGIN [A-Z ]+ PRIVATE KEY-----[\s\S]*?-----END [A-Z ]+ PRIVATE KEY-----",
@@ -17,24 +17,42 @@ DEFAULT_PATTERNS = [
     r"(?i)ghr_[A-Za-z0-9]{20,}",
     r"(?i)sk-[A-Za-z0-9]{20,}",
     r"(?i)AKIA[0-9A-Z]{16}",
+]
+
+# Broad email/phone matching mangles ordinary tool output (any ten-digit
+# number looks like a phone), so contact-info redaction only applies when
+# compliance.strict_pii is enabled.
+CONTACT_PATTERNS = [
     r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
     r"\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b",
 ]
 
 REDACTED = "[REDACTED]"
 
+_pattern_cache: dict[tuple[bool, str, int], list[re.Pattern[str]]] = {}
+
 
 def _load_patterns(config: ObservabilityConfig, root: Path | None) -> list[re.Pattern[str]]:
-    patterns = [re.compile(pattern) for pattern in DEFAULT_PATTERNS]
-    patterns_file = config.redaction.patterns_file
-    path = Path(patterns_file)
+    path = Path(config.redaction.patterns_file)
     if not path.is_absolute() and root is not None:
-        path = root / patterns_file
-    if path.exists():
+        path = root / config.redaction.patterns_file
+    strict_pii = bool(config.compliance.strict_pii)
+    mtime = path.stat().st_mtime_ns if path.exists() else -1
+    key = (strict_pii, str(path), mtime)
+    cached = _pattern_cache.get(key)
+    if cached is not None:
+        return cached
+
+    patterns = [re.compile(pattern) for pattern in SECRET_PATTERNS]
+    if strict_pii:
+        patterns.extend(re.compile(pattern) for pattern in CONTACT_PATTERNS)
+    if mtime != -1:
         for line in path.read_text(encoding="utf-8").splitlines():
             stripped = line.strip()
             if stripped and not stripped.startswith("#"):
                 patterns.append(re.compile(stripped))
+    _pattern_cache.clear()
+    _pattern_cache[key] = patterns
     return patterns
 
 
