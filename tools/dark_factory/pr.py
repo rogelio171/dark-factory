@@ -207,12 +207,32 @@ def pr_reply_thread(args: argparse.Namespace) -> int:
 def pr_fix_checks(args: argparse.Namespace) -> int:
     # Deterministic plumbing only: fetch the failing log so the agent can decide
     # the minimal code change in the df-merge phase.
-    proc = run(["gh", "run", "view", "--log-failed"], cwd=repo_root())
+    root = repo_root()
+    view = run(["gh", "pr", "view", str(args.pr), "--json", "headRefName"], cwd=root)
+    if view.returncode != 0:
+        raise DarkFactoryError(view.stderr.strip() or "gh pr view failed")
+    branch = str(json.loads(view.stdout).get("headRefName", ""))
+    if not branch:
+        raise DarkFactoryError(f"could not resolve head branch for PR {args.pr}")
+
+    runs = run(
+        ["gh", "run", "list", "--branch", branch, "--json", "databaseId,conclusion,status", "--limit", "20"],
+        cwd=root,
+    )
+    if runs.returncode != 0:
+        raise DarkFactoryError(runs.stderr.strip() or "gh run list failed")
+    failed = [item for item in json.loads(runs.stdout) if item.get("conclusion") == "failure"]
+    if not failed:
+        print(f"no failed workflow runs found for branch {branch}")
+        return 0
+
+    run_id = str(failed[0]["databaseId"])
+    proc = run(["gh", "run", "view", run_id, "--log-failed"], cwd=root)
     if proc.returncode != 0:
         raise DarkFactoryError(proc.stderr.strip() or "could not fetch failing check logs")
-    _log_github({"log": proc.stdout}, str(args.pr), snapshot_type="ci_failed_log")
+    _log_github({"run_id": run_id, "log": proc.stdout}, str(args.pr), snapshot_type="ci_failed_log")
     print(proc.stdout)
-    return 1
+    return 0
 
 
 def add_parser(subparsers) -> None:
