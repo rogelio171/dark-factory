@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
+
+_UNESCAPE_RE = re.compile(r'\\(["\\n])')
+_UNESCAPE_MAP = {'"': '"', "\\": "\\", "n": "\n"}
 
 
 def parse_scalar(value: str):
@@ -9,11 +13,10 @@ def parse_scalar(value: str):
         return value == "true"
     if value in {'""', "''"}:
         return ""
-    if (
-        len(value) >= 2
-        and value[0] == value[-1]
-        and value[0] in {"'", '"'}
-    ):
+    if len(value) >= 2 and value[0] == value[-1] == '"':
+        inner = value[1:-1]
+        return _UNESCAPE_RE.sub(lambda match: _UNESCAPE_MAP[match.group(1)], inner)
+    if len(value) >= 2 and value[0] == value[-1] == "'":
         return value[1:-1]
     return value
 
@@ -84,8 +87,15 @@ def format_scalar(value: object) -> str:
     text = str(value)
     if text == "":
         return '""'
-    if any(char in text for char in [":", "#", "\n"]) or text.strip() != text:
-        return '"' + text.replace('"', '\\"') + '"'
+    needs_quoting = (
+        any(char in text for char in [":", "#", "\n", '"', "\\"])
+        or text.strip() != text
+        or text in {"true", "false"}
+        or (text[0] == text[-1] == "'" and len(text) >= 2)
+    )
+    if needs_quoting:
+        escaped = text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+        return '"' + escaped + '"'
     return text
 
 
