@@ -8,7 +8,7 @@ import tempfile
 from pathlib import Path
 
 from .state import read_state, write_state_file, list_states
-from .utils import DarkFactoryError, now_utc, repo_root, run
+from .utils import DarkFactoryError, now_utc, repo_root, run, warn_observability_failure
 
 
 def section(text: str, heading: str) -> str:
@@ -107,8 +107,8 @@ def _log_github(payload: dict, reference: str, snapshot_type: str = "pr_status")
         from .observability.instrumentation import log_github_snapshot
 
         log_github_snapshot(run_id_for_pr(reference), reference, payload, snapshot_type=snapshot_type)
-    except Exception:
-        pass
+    except Exception as exc:
+        warn_observability_failure("github snapshot", exc)
 
 
 def ship(args: argparse.Namespace) -> int:

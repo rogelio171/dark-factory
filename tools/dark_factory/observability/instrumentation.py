@@ -7,7 +7,7 @@ import time
 from dataclasses import dataclass
 from typing import Iterator
 
-from ..utils import repo_root
+from ..utils import repo_root, warn_observability_failure
 from .config import load_config
 from .redaction import redact_text
 from .record import record_event
@@ -76,8 +76,8 @@ def cli_span(command: str, argv: list[str]) -> Iterator[CliResult]:
                 output_json={"exit_code": result.code},
                 error_json=error_json,
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            warn_observability_failure("cli.command event", exc)
 
 
 def maybe_log_phase_transition(ticket: str, field: str, value: object, run_id: str = "") -> None:

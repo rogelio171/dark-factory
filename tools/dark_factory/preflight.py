@@ -14,6 +14,7 @@ from .utils import (
     repo_root,
     run,
     tail_lines,
+    warn_observability_failure,
     write_atomic,
 )
 
@@ -158,8 +159,8 @@ def preflight(args: argparse.Namespace) -> int:
 
         run_id = str(state.get("run_id") or "")
         log_preflight_stages(str(state.get("ticket", args.ticket)), run_id, result)
-    except Exception:
-        pass
+    except Exception as exc:
+        warn_observability_failure("preflight stages", exc)
     print(output_path)
     return 0 if summary != "failed" else 1
 

@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 
 from .state import init_state, story_slug
-from .utils import DarkFactoryError, repo_root, run, slugify
+from .utils import DarkFactoryError, repo_root, run, slugify, warn_observability_failure
 
 
 def story_init(args: argparse.Namespace) -> int:
@@ -36,8 +36,8 @@ def story_init(args: argparse.Namespace) -> int:
         data["run_id"] = started_run["run_id"]
         data["observability_enabled"] = True
         write_state_file(state_file, data, body, root)
-    except Exception:
-        pass
+    except Exception as exc:
+        warn_observability_failure("run start", exc)
     if args.acceptance:
         source = Path(args.acceptance.removeprefix("@"))
         if not source.is_absolute():

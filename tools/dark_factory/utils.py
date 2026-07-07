@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -12,6 +13,26 @@ from typing import Iterable
 
 class DarkFactoryError(RuntimeError):
     """Raised for deterministic harness failures."""
+
+
+_observability_warned = False
+
+
+def warn_observability_failure(context: str, exc: Exception) -> None:
+    """Report a failed observability recording without failing the command.
+
+    Recording stays fail-open, but a broken store must not be invisible:
+    print one warning per process instead of swallowing every error.
+    """
+    global _observability_warned
+    if _observability_warned:
+        return
+    _observability_warned = True
+    print(
+        f"df: warning: observability recording failed ({context}): {exc}; "
+        "run 'df observability doctor' to inspect the store",
+        file=sys.stderr,
+    )
 
 
 def now_utc() -> str:

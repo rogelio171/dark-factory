@@ -4,7 +4,15 @@ import argparse
 import shutil
 from pathlib import Path
 
-from .utils import DarkFactoryError, now_utc, repo_root, slugify, today_utc, write_atomic
+from .utils import (
+    DarkFactoryError,
+    now_utc,
+    repo_root,
+    slugify,
+    today_utc,
+    warn_observability_failure,
+    write_atomic,
+)
 from .yamlish import dump_simple_yaml, split_frontmatter
 
 
@@ -217,8 +225,8 @@ def set_state(args: argparse.Namespace) -> int:
 
         run_id = str(data.get("run_id") or "")
         maybe_log_phase_transition(args.ticket, args.field, value, run_id=run_id)
-    except Exception:
-        pass
+    except Exception as exc:
+        warn_observability_failure("phase transition", exc)
     print(path)
     return 0
 
@@ -237,8 +245,8 @@ def block_state(args: argparse.Namespace) -> int:
 
         run_id = str(data.get("run_id") or "")
         maybe_log_phase_transition(args.ticket, "status", "blocked", run_id=run_id)
-    except Exception:
-        pass
+    except Exception as exc:
+        warn_observability_failure("phase transition", exc)
     print(path)
     return 0
 
@@ -262,8 +270,8 @@ def unblock_state(args: argparse.Namespace) -> int:
 
         run_id = str(data.get("run_id") or "")
         maybe_log_phase_transition(args.ticket, "status", resume_status, run_id=run_id)
-    except Exception:
-        pass
+    except Exception as exc:
+        warn_observability_failure("phase transition", exc)
     print(path)
     return 0
 

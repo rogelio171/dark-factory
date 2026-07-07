@@ -4,7 +4,7 @@ import argparse
 import json
 
 from .state import list_states, read_state, write_state_file
-from .utils import DarkFactoryError, now_utc, repo_root, run
+from .utils import DarkFactoryError, now_utc, repo_root, run, warn_observability_failure
 
 DISPATCH = {
     "intake": "df-workspace",
@@ -75,8 +75,8 @@ def resume(args: argparse.Namespace) -> int:
 
             run_id = str(state.get("run_id") or "")
             log_github_snapshot(run_id, str(state.get("pr_number") or ""), pr_data, snapshot_type="pr_reconcile")
-    except Exception:
-        pass
+    except Exception as exc:
+        warn_observability_failure("pr reconcile snapshot", exc)
 
     status = str(state.get("status", "blocked"))
     next_skill = DISPATCH.get(status, "stop")

@@ -58,8 +58,10 @@ def main(argv: list[str] | None = None) -> int:
 
         if command != "observability" or getattr(args, "observability_command", "") != "init":
             ensure_initialized()
-    except Exception:
-        pass
+    except Exception as exc:
+        from .utils import warn_observability_failure
+
+        warn_observability_failure("store initialization", exc)
 
     from .observability.instrumentation import cli_span
 
