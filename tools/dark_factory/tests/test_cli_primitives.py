@@ -47,7 +47,7 @@ class CliPrimitiveTests(unittest.TestCase):
 
             run_df(tmp_path, "state", "init", "OFRS2-1", "--title", "Add Toggle")
             title = run_df(tmp_path, "state", "get", "OFRS2-1", "title").stdout.strip()
-            self.assertEqual(title, "add-toggle")
+            self.assertEqual(title, "Add Toggle")
 
             evidence = tmp_path / "docs" / "specs" / "OFRS2-1-add-toggle" / "evidence" / "unit"
             evidence.mkdir(parents=True, exist_ok=True)
