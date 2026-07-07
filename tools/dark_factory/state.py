@@ -147,7 +147,7 @@ def init_state(args: argparse.Namespace) -> int:
     branch = args.branch or f"{args.ticket}-{slugify(title)}"
     defaults = {
         "ticket": args.ticket,
-        "title": slugify(title),
+        "title": title,
         "branch": branch,
         "status": args.status or "intake",
         "phase_detail": "",
