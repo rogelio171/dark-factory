@@ -75,11 +75,28 @@ Every installed target repo gets `.agents/dark-factory/observability.db` (gitign
 ```text
 dark-factory/
 ├── README.md
+├── LICENSE
 ├── install.sh
+├── pyproject.toml
+├── bin/
+│   └── df                  # launcher for the deterministic harness CLI
+├── dark_factory/           # import shim so `python -m dark_factory` works from this checkout
+├── tools/
+│   └── dark_factory/       # the df CLI implementation (state, risk, preflight, pr, observability, ...)
+│       └── tests/
+├── scripts/
+│   ├── run-tests.sh
+│   ├── validate_skill_pack.py
+│   └── smoke_install.sh
+├── tests/
+│   └── fixtures/           # sample target-project layouts used by CLI tests
 ├── docs/
 │   ├── SKILL_CONTRACT.md
 │   ├── WORKFLOW.md
 │   └── OBSERVABILITY.md
+├── .claude-plugin/         # Claude Code plugin + marketplace manifests
+├── .cursor-plugin/         # Cursor plugin manifest
+├── .github/workflows/      # validation CI for this repo
 └── skills/
     ├── dark-factory/
     ├── using-dark-factory/
