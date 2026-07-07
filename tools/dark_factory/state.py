@@ -199,7 +199,12 @@ def set_state(args: argparse.Namespace) -> int:
     path, data, body = read_state(args.ticket)
     value: object = args.value
     if args.value.startswith("{") or args.value.startswith("["):
-        value = json.loads(args.value)
+        try:
+            value = json.loads(args.value)
+        except json.JSONDecodeError as exc:
+            raise DarkFactoryError(
+                f"value for {args.field} looks like JSON but does not parse: {exc}"
+            ) from exc
     elif args.value.lower() == "true":
         value = True
     elif args.value.lower() == "false":
