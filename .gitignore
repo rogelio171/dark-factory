@@ -6,3 +6,8 @@ __pycache__/
 # This source repo should never carry an installed target-project harness;
 # .agents/ is only ever created inside a target project by install.sh.
 .agents/
+
+# Python packaging build artifacts
+build/
+*.egg-info/
+dist/
