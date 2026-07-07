@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dark-factory"
+dynamic = ["version"]
+description = "Deterministic harness CLI for the Dark Factory agent delivery workflow skill pack."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Rogelio Orona" }]
+keywords = ["skills", "jira", "delivery", "workflow", "preflight", "agentic"]
+
+[project.urls]
+Homepage = "https://github.com/rogelio171/dark-factory"
+Repository = "https://github.com/rogelio171/dark-factory"
+
+[project.scripts]
+df = "dark_factory.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "tools" }
+
+[tool.setuptools.packages.find]
+where = ["tools"]
+exclude = ["dark_factory.tests*"]
+
+[tool.setuptools.package-data]
+"dark_factory.observability" = ["templates/*", "schema.sql"]
+
+[tool.setuptools.dynamic]
+version = { attr = "dark_factory.__version__" }

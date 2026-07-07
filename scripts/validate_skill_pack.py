@@ -351,6 +351,35 @@ def validate_claude_plugin() -> list[str]:
     return errors
 
 
+def _module_version(path: Path) -> str:
+    match = re.search(r'^__version__ = "([^"]+)"', path.read_text(encoding="utf-8"), re.MULTILINE)
+    return match.group(1) if match else ""
+
+
+def validate_versions() -> list[str]:
+    expected = _module_version(ROOT / "tools" / "dark_factory" / "__init__.py")
+    if not expected:
+        return ["tools/dark_factory/__init__.py: missing __version__"]
+
+    declared: dict[str, str] = {
+        "dark_factory/__init__.py": _module_version(ROOT / "dark_factory" / "__init__.py"),
+        ".claude-plugin/plugin.json": json.loads(
+            CLAUDE_PLUGIN_MANIFEST.read_text(encoding="utf-8")
+        ).get("version", ""),
+        ".claude-plugin/marketplace.json": json.loads(
+            CLAUDE_MARKETPLACE.read_text(encoding="utf-8")
+        )["plugins"][0].get("version", ""),
+        ".cursor-plugin/plugin.json": json.loads(
+            (ROOT / ".cursor-plugin" / "plugin.json").read_text(encoding="utf-8")
+        ).get("version", ""),
+    }
+    return [
+        f"{source}: version {version!r} does not match tools/dark_factory/__init__.py {expected!r}"
+        for source, version in declared.items()
+        if version != expected
+    ]
+
+
 def main() -> int:
     errors: list[str] = []
 
@@ -360,6 +389,7 @@ def main() -> int:
     errors.extend(validate_state_template())
     errors.extend(validate_workflow_yaml())
     errors.extend(validate_claude_plugin())
+    errors.extend(validate_versions())
 
     for error in errors:
         fail(error)
