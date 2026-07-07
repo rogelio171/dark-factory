@@ -123,14 +123,14 @@ Before using it in a target project, make sure the following are available:
 Add this repository as a Claude Code plugin marketplace, then install Dark Factory from it:
 
 ```text
-/plugin marketplace add rogelioorona/dark-factory
+/plugin marketplace add rogelio171/dark-factory
 /plugin install dark-factory@dark-factory
 ```
 
 From a shell, use the equivalent Claude Code CLI commands:
 
 ```bash
-claude plugin marketplace add rogelioorona/dark-factory
+claude plugin marketplace add rogelio171/dark-factory
 claude plugin install dark-factory@dark-factory --scope project
 ```
 

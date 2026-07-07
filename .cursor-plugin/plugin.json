@@ -3,8 +3,8 @@
   "displayName": "Dark Factory",
   "description": "Jira-to-PR delivery workflow skills with durable story state, module-scoped validation, review, evidence, and shipping phases",
   "version": "0.1.0",
-  "homepage": "https://github.com/rogelioorona/dark-factory",
-  "repository": "https://github.com/rogelioorona/dark-factory",
+  "homepage": "https://github.com/rogelio171/dark-factory",
+  "repository": "https://github.com/rogelio171/dark-factory",
   "license": "MIT",
   "keywords": [
     "skills",

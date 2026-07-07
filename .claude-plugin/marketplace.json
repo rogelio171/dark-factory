@@ -2,7 +2,7 @@
   "name": "dark-factory",
   "owner": {
     "name": "Rogelio Orona",
-    "url": "https://github.com/rogelioorona"
+    "url": "https://github.com/rogelio171"
   },
   "plugins": [
     {
@@ -10,7 +10,7 @@
       "source": ".",
       "description": "Dark Factory delivery workflow skill pack for Claude Code.",
       "version": "0.1.0",
-      "homepage": "https://github.com/rogelioorona/dark-factory",
+      "homepage": "https://github.com/rogelio171/dark-factory",
       "license": "MIT",
       "keywords": [
         "skills",
