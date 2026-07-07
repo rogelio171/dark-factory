@@ -4,7 +4,7 @@ import os
 import sqlite3
 from pathlib import Path
 
-from ..utils import repo_root
+from ..utils import repo_root, run
 
 SCHEMA_VERSION = "1"
 GITIGNORE_ENTRIES = [
@@ -86,6 +86,11 @@ def ensure_gitignore(root: Path | None = None) -> None:
     existing = gitignore.read_text(encoding="utf-8") if gitignore.exists() else ""
     marker = "# Dark Factory observability"
     if marker in existing:
+        return
+    # An existing pattern (e.g. a blanket .agents/ ignore) may already cover
+    # the store; ask git instead of duplicating entries.
+    check = run(["git", "-C", str(root), "check-ignore", *GITIGNORE_ENTRIES])
+    if check.returncode == 0 and len(check.stdout.splitlines()) == len(GITIGNORE_ENTRIES):
         return
     block = "\n".join(
         [
