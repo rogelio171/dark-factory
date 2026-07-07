@@ -226,8 +226,11 @@ Core commands:
 ```bash
 df doctor --runtime generic
 df state init|get|set|list|block|unblock
+df workspace detect|create
+df story init <ticket>
 df detect-tooling
 df classify-risk --diff-base origin/main
+df commit-lint [--diff-base <ref>]
 df preflight <ticket>
 df evidence index <ticket>
 df render-pr-body <ticket>
@@ -523,24 +526,34 @@ This does not change any in-flight story's risk automatically; it only changes w
 
 ## Maintaining This Skill Pack
 
-This repository validates itself with `.github/workflows/validate.yml`. The validation checks:
+This repository validates itself with `.github/workflows/validate.yml`. The `skill-pack` job runs on Python 3.10 through 3.13 and checks:
 
 - `SKILL.md` frontmatter and required section order
 - referenced sibling files in skill docs
 - required coordinator/subagent delegation guidance for heavy-work skills
 - valid `df <command>` references in skill docs
 - state-template schema drift
+- version consistency across `tools/dark_factory/__init__.py`, the import shim, and the plugin manifests
 - fail-by-default placeholders in generated workflow templates
 - generated GitHub workflow YAML syntax
 - `install.sh` smoke behavior: first install, idempotent reinstall, and selective reinstall after a changed skill
-- pytest coverage under `tools/dark_factory/tests/` exercises CLI primitives against temporary repositories
+- pytest coverage under `tools/dark_factory/tests/` exercises CLI primitives against temporary repositories, including state frontmatter round-trip stability
+
+A separate `lint` job runs `ruff`, `mypy`, and `shellcheck` over the Python sources and shell scripts.
 
 Run the same checks locally with:
 
 ```bash
 python -m pip install pyyaml pytest  # needed for workflow YAML and CLI tests
 bash scripts/run-tests.sh
+
+python -m pip install ruff mypy      # the CI lint gate (shellcheck comes from your package manager)
+python -m ruff check tools scripts dark_factory
+python -m mypy tools/dark_factory
+shellcheck install.sh bin/df scripts/*.sh skills/df-observability/templates/scripts/*.sh
 ```
+
+Packaging metadata lives in `pyproject.toml`; `pip install -e .` gives you the `df` console script for development. The single source of truth for the version is `tools/dark_factory/__init__.py`.
 
 ## Updating the Skill Pack in a Target Project
 
@@ -574,8 +587,16 @@ Check `docs/specs/<ticket>/state.md` for `status: blocked`, `blocked_reason`, an
 
 Run `df-wiki-init` again in the target project to refresh the project knowledge base.
 
+### `df` prints an observability warning
+
+Recording is fail-open: when the SQLite store is corrupt, locked, or missing, commands still succeed but print one `df: warning: observability recording failed (...)` line per invocation. Run `df observability doctor` to inspect the store; `df observability init` recreates a missing one.
+
 ## Additional Documentation
 
 - For the concise lifecycle summary, see `docs/WORKFLOW.md`.
 - For the exact instructions each phase uses, read the `SKILL.md` files under `skills/`.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
 
