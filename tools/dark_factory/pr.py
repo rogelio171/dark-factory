@@ -132,21 +132,24 @@ def ship(args: argparse.Namespace) -> int:
         handle.write(body_text)
         body_file = handle.name
 
-    if pr_existing.returncode == 0:
-        info = json.loads(pr_existing.stdout)
-        pr_number = str(info["number"])
-        update = run(["gh", "pr", "edit", pr_number, "--body-file", body_file], cwd=root)
-        if update.returncode != 0:
-            raise DarkFactoryError(update.stderr.strip() or "gh pr edit failed")
-        pr_url = info.get("url", "")
-    else:
-        title = f"{state.get('ticket', args.ticket)}: {state.get('title', current_branch(root))}"
-        created = run(["gh", "pr", "create", "--title", title, "--body-file", body_file], cwd=root)
-        if created.returncode != 0:
-            raise DarkFactoryError(created.stderr.strip() or "gh pr create failed")
-        pr_url = created.stdout.strip().splitlines()[-1]
-        view = run(["gh", "pr", "view", pr_url, "--json", "number"], cwd=root)
-        pr_number = str(json.loads(view.stdout)["number"]) if view.returncode == 0 else ""
+    try:
+        if pr_existing.returncode == 0:
+            info = json.loads(pr_existing.stdout)
+            pr_number = str(info["number"])
+            update = run(["gh", "pr", "edit", pr_number, "--body-file", body_file], cwd=root)
+            if update.returncode != 0:
+                raise DarkFactoryError(update.stderr.strip() or "gh pr edit failed")
+            pr_url = info.get("url", "")
+        else:
+            title = f"{state.get('ticket', args.ticket)}: {state.get('title', current_branch(root))}"
+            created = run(["gh", "pr", "create", "--title", title, "--body-file", body_file], cwd=root)
+            if created.returncode != 0:
+                raise DarkFactoryError(created.stderr.strip() or "gh pr create failed")
+            pr_url = created.stdout.strip().splitlines()[-1]
+            view = run(["gh", "pr", "view", pr_url, "--json", "number"], cwd=root)
+            pr_number = str(json.loads(view.stdout)["number"]) if view.returncode == 0 else ""
+    finally:
+        Path(body_file).unlink(missing_ok=True)
 
     risk = str(state.get("risk", "low"))
     warnings: list[str] = []
