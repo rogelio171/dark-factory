@@ -30,12 +30,10 @@ def render_pr_body(ticket: str) -> str:
     root = repo_root()
     _, state, _ = read_state(ticket, root)
     spec_path = root / str(state.get("spec_path", ""))
-    plan_path = root / str(state.get("plan_path", ""))
     preflight_path = root / str(state.get("preflight_path", ""))
     evidence_path = root / str(state.get("evidence_path", "")) / "INDEX.md"
 
     spec = spec_path.read_text(encoding="utf-8") if spec_path.exists() else ""
-    plan = plan_path.read_text(encoding="utf-8") if plan_path.exists() else ""
     preflight = json.loads(preflight_path.read_text(encoding="utf-8")) if preflight_path.exists() else {}
     evidence = evidence_path.read_text(encoding="utf-8") if evidence_path.exists() else ""
     commands = state.get("validation_commands", {})

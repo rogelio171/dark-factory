@@ -7,15 +7,14 @@ from pathlib import Path
 
 from ..state import find_story_dir, list_states, read_state, write_state_file
 from ..utils import DarkFactoryError, repo_root
-from .config import config_as_json, load_config, save_default_config
-from .db import SCHEMA_VERSION, config_path, db_path, ensure_gitignore, ensure_initialized, schema_version, connect
+from .config import config_as_json, load_config
+from .db import SCHEMA_VERSION, config_path, db_path, ensure_initialized, schema_version, connect
 from .export import export_data
 from .prune import prune
 from .query import format_tail_line, get_run, get_session, query_events, report, stats, tail_events
 from .record import (
     end_run,
     end_session,
-    get_active_run_for_ticket,
     new_id,
     record_batch,
     record_event,

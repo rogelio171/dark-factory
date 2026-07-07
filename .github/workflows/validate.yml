@@ -9,6 +9,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install lint dependencies
+        run: python -m pip install ruff mypy
+
+      - name: Ruff
+        run: python -m ruff check tools scripts dark_factory
+
+      - name: Mypy
+        run: python -m mypy tools/dark_factory
+
+      - name: Shellcheck
+        run: shellcheck install.sh bin/df scripts/*.sh skills/df-observability/templates/scripts/*.sh
+
   skill-pack:
     name: skill-pack (${{ matrix.python-version }})
     runs-on: ubuntu-latest

@@ -25,7 +25,7 @@ def story_init(args: argparse.Namespace) -> int:
         from .observability.record import start_run
 
         ensure_initialized(root)
-        run = start_run(
+        started_run = start_run(
             args.ticket,
             story_slug=args.slug,
             current_phase=str(args.status or "intake"),
@@ -33,7 +33,7 @@ def story_init(args: argparse.Namespace) -> int:
         from .state import read_state, write_state_file
 
         state_file, data, body = read_state(args.ticket, root)
-        data["run_id"] = run["run_id"]
+        data["run_id"] = started_run["run_id"]
         data["observability_enabled"] = True
         write_state_file(state_file, data, body, root)
     except Exception:

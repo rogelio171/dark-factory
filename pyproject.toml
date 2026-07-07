@@ -31,3 +31,14 @@ exclude = ["dark_factory.tests*"]
 
 [tool.setuptools.dynamic]
 version = { attr = "dark_factory.__version__" }
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+extend-exclude = ["tests/fixtures"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true

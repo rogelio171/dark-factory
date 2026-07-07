@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from datetime import datetime, timedelta, timezone
 
 from .db import connect, row_to_dict
@@ -59,7 +58,7 @@ def query_events(
             """,
             (*params, limit),
         ).fetchall()
-        return [row_to_dict(row) for row in rows if row_to_dict(row)]
+        return [item for row in rows if (item := row_to_dict(row)) is not None]
     finally:
         connection.close()
 
